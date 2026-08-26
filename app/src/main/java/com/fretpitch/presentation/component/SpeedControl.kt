@@ -32,7 +32,7 @@ fun SpeedControl(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        IconButton(onClick = onSpeedDown) {
+        IconButton(onClick = onSpeedUp) {
             Icon(
                 Icons.Default.KeyboardArrowDown,
                 contentDescription = stringResource(R.string.speed_down),
@@ -48,7 +48,7 @@ fun SpeedControl(
             modifier = Modifier.width(40.dp)
         )
 
-        IconButton(onClick = onSpeedUp) {
+        IconButton(onClick = onSpeedDown) {
             Icon(
                 Icons.Default.KeyboardArrowUp,
                 contentDescription = stringResource(R.string.speed_up),

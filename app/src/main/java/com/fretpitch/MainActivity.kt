@@ -24,11 +24,11 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: android.content.Context?) {
-        super.attachBaseContext(newBase)
         newBase?.let {
             val language = LocaleHelper.getLanguage(it)
-            LocaleHelper.updateLocale(it, language)
-        }
+            val updatedContext = LocaleHelper.updateLocale(it, language)
+            super.attachBaseContext(updatedContext)
+        } ?: super.attachBaseContext(newBase)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
