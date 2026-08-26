@@ -6,16 +6,11 @@ import android.media.AudioFormat
 import android.media.AudioTrack
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
-import java.io.DataOutputStream
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.PI
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 @Singleton
 class TonePlayer @Inject constructor(
