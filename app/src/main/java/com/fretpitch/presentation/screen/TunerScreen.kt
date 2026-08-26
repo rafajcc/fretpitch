@@ -1,0 +1,270 @@
+package com.fretpitch.presentation.screen
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.fretpitch.R
+import com.fretpitch.presentation.component.TunerGauge
+import com.fretpitch.presentation.theme.AccentGreen
+import com.fretpitch.presentation.theme.AccentRed
+import com.fretpitch.presentation.theme.DarkSurfaceVariant
+import com.fretpitch.presentation.theme.TextSecondary
+import com.fretpitch.presentation.viewmodel.TunerViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TunerScreen(
+    onBack: () -> Unit,
+    viewModel: TunerViewModel = hiltViewModel()
+) {
+    val tunerState by viewModel.tunerState.collectAsState()
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.stopListening()
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.tuner_title),
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        viewModel.stopListening()
+                        onBack()
+                    }) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.close)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    if (tunerState.isListening && tunerState.detectedNote != null) {
+                        Text(
+                            text = tunerState.noteNameDisplay,
+                            fontSize = 72.sp,
+                            fontWeight = FontWeight.Light,
+                            color = when {
+                                tunerState.isInTune -> AccentGreen
+                                tunerState.isCloseToTune -> MaterialTheme.colorScheme.secondary
+                                else -> AccentRed
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        if (tunerState.matchedString != null) {
+                            Text(
+                                text = stringResource(R.string.tuner_string_label, tunerState.matchedString!!.number),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = TextSecondary
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        TunerGauge(
+                            centsOffset = tunerState.centsOffset,
+                            isInTune = tunerState.isInTune,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = tunerState.frequencyDisplay,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = TextSecondary
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = tunerState.centsDisplay,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = when {
+                                tunerState.isInTune -> AccentGreen
+                                tunerState.isCloseToTune -> MaterialTheme.colorScheme.secondary
+                                else -> AccentRed
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = when {
+                                tunerState.isInTune -> stringResource(R.string.tuner_in_tune)
+                                tunerState.centsOffset < 0 -> stringResource(R.string.tuner_too_low)
+                                else -> stringResource(R.string.tuner_too_high)
+                            },
+                            style = MaterialTheme.typography.titleMedium,
+                            color = when {
+                                tunerState.isInTune -> AccentGreen
+                                tunerState.isCloseToTune -> MaterialTheme.colorScheme.secondary
+                                else -> AccentRed
+                            }
+                        )
+                    } else if (tunerState.isListening) {
+                        Spacer(modifier = Modifier.height(60.dp))
+
+                        Icon(
+                            Icons.Default.Mic,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = TextSecondary.copy(alpha = 0.5f)
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = stringResource(R.string.tuner_no_signal),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = TextSecondary.copy(alpha = 0.5f),
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "82 Hz - 1000 Hz",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary.copy(alpha = 0.3f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(60.dp))
+
+                        Icon(
+                            Icons.Default.MicOff,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = TextSecondary.copy(alpha = 0.3f)
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = stringResource(R.string.tuner_title),
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = TextSecondary.copy(alpha = 0.5f),
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "E \u2022 A \u2022 D \u2022 G \u2022 B \u2022 E",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = TextSecondary.copy(alpha = 0.3f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = {
+                        if (tunerState.isListening) {
+                            viewModel.stopListening()
+                        } else {
+                            viewModel.startListening()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (tunerState.isListening) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
+                    )
+                ) {
+                    Icon(
+                        imageVector = if (tunerState.isListening) Icons.Default.MicOff else Icons.Default.Mic,
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (tunerState.isListening) {
+                            stringResource(R.string.tuner_stop)
+                        } else {
+                            stringResource(R.string.tuner_start)
+                        },
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+}

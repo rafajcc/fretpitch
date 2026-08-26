@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -52,6 +53,7 @@ import com.fretpitch.presentation.viewmodel.MainViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    onNavigateToTuner: () -> Unit,
     onLanguageChange: (String) -> Unit,
     currentLanguage: String = "es",
     viewModel: MainViewModel = hiltViewModel()
@@ -98,6 +100,12 @@ fun MainScreen(
                     )
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToTuner) {
+                        Icon(
+                            Icons.Default.Tune,
+                            contentDescription = stringResource(R.string.nav_tuner)
+                        )
+                    }
                     Box {
                         IconButton(onClick = { showLanguageMenu = true }) {
                             Icon(

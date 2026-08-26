@@ -12,7 +12,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.fretpitch.presentation.screen.MainScreen
+import com.fretpitch.presentation.screen.TunerScreen
 import com.fretpitch.presentation.theme.FretPitchTheme
 import com.fretpitch.presentation.util.LocaleHelper
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,20 +36,38 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val currentLanguage = remember { mutableStateOf(LocaleHelper.getLanguage(this)) }
+            val navController = rememberNavController()
 
             FretPitchTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen(
-                        onLanguageChange = { language ->
-                            LocaleHelper.setLanguage(this@MainActivity, language)
-                            currentLanguage.value = language
-                            LocaleHelper.recreateActivity(this@MainActivity)
-                        },
-                        currentLanguage = currentLanguage.value
-                    )
+                    NavHost(
+                        navController = navController,
+                        startDestination = "practice"
+                    ) {
+                        composable("practice") {
+                            MainScreen(
+                                onNavigateToTuner = {
+                                    navController.navigate("tuner")
+                                },
+                                onLanguageChange = { language ->
+                                    LocaleHelper.setLanguage(this@MainActivity, language)
+                                    currentLanguage.value = language
+                                    LocaleHelper.recreateActivity(this@MainActivity)
+                                },
+                                currentLanguage = currentLanguage.value
+                            )
+                        }
+                        composable("tuner") {
+                            TunerScreen(
+                                onBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
