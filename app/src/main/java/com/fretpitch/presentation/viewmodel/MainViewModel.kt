@@ -171,9 +171,9 @@ class MainViewModel @Inject constructor(
         }
 
         if (correct) {
-            tonePlayer.playCorrect()
+            viewModelScope.launch { tonePlayer.playCorrect() }
         } else {
-            tonePlayer.playIncorrect()
+            viewModelScope.launch { tonePlayer.playIncorrect() }
         }
     }
 }
