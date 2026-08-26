@@ -15,9 +15,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.fretpitch.R
 import com.fretpitch.domain.model.SessionResult
+import com.fretpitch.presentation.util.nameResId
 
 @Composable
 fun StatsPanel(
@@ -32,7 +35,7 @@ fun StatsPanel(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Resultados",
+            text = stringResource(R.string.results),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.fillMaxWidth(),
@@ -40,7 +43,7 @@ fun StatsPanel(
         )
 
         Text(
-            text = "Tiempo: ${sessionResult.formattedTime}",
+            text = stringResource(R.string.time_format, sessionResult.formattedTime),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             modifier = Modifier.fillMaxWidth(),
@@ -60,7 +63,7 @@ fun StatsPanel(
                     color = MaterialTheme.colorScheme.tertiary
                 )
                 Text(
-                    text = "Aciertos",
+                    text = stringResource(R.string.correct_count),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
@@ -72,7 +75,7 @@ fun StatsPanel(
                     color = MaterialTheme.colorScheme.error
                 )
                 Text(
-                    text = "Fallos",
+                    text = stringResource(R.string.incorrect_count),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
@@ -84,7 +87,7 @@ fun StatsPanel(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Precisión",
+                    text = stringResource(R.string.accuracy),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
@@ -95,7 +98,7 @@ fun StatsPanel(
 
         if (sessionResult.noteStats.isNotEmpty()) {
             Text(
-                text = "Por nota",
+                text = stringResource(R.string.by_note),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
             )
@@ -105,7 +108,7 @@ fun StatsPanel(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = note.displayName,
+                        text = stringResource(note.nameResId()),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
@@ -122,7 +125,7 @@ fun StatsPanel(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Por cuerda",
+                text = stringResource(R.string.by_string),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
             )
@@ -132,7 +135,7 @@ fun StatsPanel(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Cuerda ${guitarString.number}",
+                        text = stringResource(R.string.string_format, guitarString.number),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
@@ -149,7 +152,7 @@ fun StatsPanel(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Por combinación",
+                text = stringResource(R.string.by_combination),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
             )
@@ -159,7 +162,7 @@ fun StatsPanel(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "${pair.first.displayName} - Cuerda ${pair.second.number}",
+                        text = stringResource(R.string.combination_format, stringResource(pair.first.nameResId()), pair.second.number),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )

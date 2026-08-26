@@ -1,3 +1,80 @@
 <resources>
     <string name="app_name">FretPitch</string>
+
+    <!-- Mode selector -->
+    <string name="mode_one_note">Una nota</string>
+    <string name="mode_one_string">Una cuerda</string>
+    <string name="mode_all">Todas</string>
+    <string name="label_sharps">Sostenidos (#)</string>
+    <string name="label_note">Nota</string>
+    <string name="label_string">Cuerda</string>
+    <string name="string_format">Cuerda %d</string>
+
+    <!-- Note display -->
+    <string name="press_play">Pulsa Play</string>
+
+    <!-- Note names -->
+    <string name="note_C">Do</string>
+    <string name="note_C_SHARP">Do#</string>
+    <string name="note_D">Re</string>
+    <string name="note_D_SHARP">Re#</string>
+    <string name="note_E">Mi</string>
+    <string name="note_F">Fa</string>
+    <string name="note_F_SHARP">Fa#</string>
+    <string name="note_G">Sol</string>
+    <string name="note_G_SHARP">Sol#</string>
+    <string name="note_A">La</string>
+    <string name="note_A_SHARP">La#</string>
+    <string name="note_B">Si</string>
+
+    <!-- Speed control -->
+    <string name="speed_down">Bajar velocidad</string>
+    <string name="speed_up">Subir velocidad</string>
+
+    <!-- Play/Stop -->
+    <string name="play">Play</string>
+    <string name="stop">Stop</string>
+
+    <!-- Stats -->
+    <string name="results">Resultados</string>
+    <string name="time_format">Tiempo: %s</string>
+    <string name="correct_count">Aciertos</string>
+    <string name="incorrect_count">Fallos</string>
+    <string name="accuracy">Precisión</string>
+    <string name="by_note">Por nota</string>
+    <string name="by_string">Por cuerda</string>
+    <string name="by_combination">Por combinación</string>
+    <string name="combination_format">%s - Cuerda %d</string>
+    <string name="close">Cerrar</string>
+
+    <!-- Permission -->
+    <string name="mic_permission_title">Permiso de micrófono requerido</string>
+    <string name="mic_permission_description">FretPitch necesita acceso al micrófono para detectar las notas musicales que tocas en la guitarra.</string>
+    <string name="mic_permission_rationale">Sin el permiso de micrófono, la app no puede funcionar. Por favor, concede el permiso desde la configuración de la aplicación.</string>
+    <string name="open_settings">Abrir Configuración</string>
+    <string name="grant_permission">Conceder Permiso</string>
+
+    <!-- Feedback -->
+    <string name="feedback_correct">Correcto</string>
+    <string name="feedback_incorrect">Incorrecto</string>
+
+    <!-- Version -->
+    <string name="version_label">Versión 3.0 - por rafajcc &amp; Vera Technology</string>
+
+    <!-- Language -->
+    <string name="language">Idioma</string>
+
+    <!-- Navigation -->
+    <string name="nav_practice">Práctica</string>
+    <string name="nav_tuner">Afinador</string>
+
+    <!-- Tuner -->
+    <string name="tuner_title">Afinador</string>
+    <string name="tuner_start">Iniciar</string>
+    <string name="tuner_stop">Detener</string>
+    <string name="tuner_no_signal">Sin señal</string>
+    <string name="tuner_in_tune">Afinado</string>
+    <string name="tuner_too_low">Bemol</string>
+    <string name="tuner_too_high">Sostenido</string>
+    <string name="tuner_string_label">Cuerda %d</string>
 </resources>

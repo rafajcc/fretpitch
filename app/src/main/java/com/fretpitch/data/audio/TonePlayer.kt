@@ -8,10 +8,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.PI
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 @Singleton
 class TonePlayer @Inject constructor(
@@ -19,31 +23,97 @@ class TonePlayer @Inject constructor(
 ) {
     companion object {
         private const val SAMPLE_RATE = 44100
+        private const val ATTACK_MS = 8
+        private const val DECAY_MS = 15
+        private const val RELEASE_MS = 30
     }
 
     suspend fun playCorrect() = withContext(Dispatchers.IO) {
-        playTone(880f, 80)
-        delay(50)
-        playTone(1100f, 80)
+        playPleasantChime()
     }
 
     suspend fun playIncorrect() = withContext(Dispatchers.IO) {
-        playTone(440f, 100)
-        delay(60)
-        playTone(330f, 150)
+        playMutedBlip()
     }
 
-    private fun playTone(frequency: Float, durationMs: Int) {
+    private fun playPleasantChime() {
+        val durationMs = 180
         val numSamples = SAMPLE_RATE * durationMs / 1000
-        val sample = ShortArray(numSamples)
+        val sample = FloatArray(numSamples)
+
+        val freq1 = 523.25f
+        val freq2 = 659.25f
+        val freq3 = 783.99f
 
         for (i in 0 until numSamples) {
             val t = i.toFloat() / SAMPLE_RATE
-            val value = (sin(2.0 * PI * frequency * t) * 0.5 * 32767).toInt()
-            sample[i] = value.coerceIn(-32768, 32767).toShort()
+            val envelope = computeEnvelope(i, numSamples, ATTACK_MS, DECAY_MS, RELEASE_MS)
+
+            val s1 = sin(2.0 * PI * freq1 * t).toFloat() * 0.35f
+            val s2 = sin(2.0 * PI * freq2 * t).toFloat() * 0.25f
+            val s3 = sin(2.0 * PI * freq3 * t).toFloat() * 0.15f
+            val fundamental = sin(2.0 * PI * freq1 * 0.5f * t).toFloat() * 0.1f
+
+            val warmFilter = 0.7f + 0.3f * sin(2.0 * PI * 8f * t).toFloat()
+
+            sample[i] = (s1 + s2 + s3 + fundamental) * envelope * warmFilter * 0.6f
         }
 
-        val bufferSize = sample.size * 2
+        playSamples(sample)
+    }
+
+    private fun playMutedBlip() {
+        val durationMs = 120
+        val numSamples = SAMPLE_RATE * durationMs / 1000
+        val sample = FloatArray(numSamples)
+
+        val freq1 = 220f
+        val freq2 = 165f
+
+        for (i in 0 until numSamples) {
+            val t = i.toFloat() / SAMPLE_RATE
+            val envelope = computeEnvelope(i, numSamples, 3, 8, 20)
+
+            val s1 = sin(2.0 * PI * freq1 * t).toFloat() * 0.25f
+            val s2 = sin(2.0 * PI * freq2 * t).toFloat() * 0.15f
+            val noise = (Math.random().toFloat() - 0.5f) * 0.05f
+
+            val dampening = 1.0f - (i.toFloat() / numSamples) * 0.7f
+
+            sample[i] = (s1 + s2 + noise) * envelope * dampening * 0.4f
+        }
+
+        playSamples(sample)
+    }
+
+    private fun computeEnvelope(sampleIndex: Int, totalSamples: Int, attackMs: Int, decayMs: Int, releaseMs: Int): Float {
+        val attackSamples = SAMPLE_RATE * attackMs / 1000
+        val decaySamples = SAMPLE_RATE * decayMs / 1000
+        val releaseSamples = SAMPLE_RATE * releaseMs / 1000
+        val sustainLevel = 0.65f
+
+        return when {
+            sampleIndex < attackSamples -> {
+                sampleIndex.toFloat() / attackSamples
+            }
+            sampleIndex < attackSamples + decaySamples -> {
+                val decayProgress = (sampleIndex - attackSamples).toFloat() / decaySamples
+                1.0f - (1.0f - sustainLevel) * decayProgress
+            }
+            sampleIndex > totalSamples - releaseSamples -> {
+                val releaseProgress = (totalSamples - sampleIndex).toFloat() / releaseSamples
+                sustainLevel * releaseProgress
+            }
+            else -> sustainLevel
+        }
+    }
+
+    private fun playSamples(samples: FloatArray) {
+        val pcm = ShortArray(samples.size) { i ->
+            (samples[i] * 32767f).toInt().coerceIn(-32768, 32767).toShort()
+        }
+
+        val bufferSize = pcm.size * 2
         val track = AudioTrack.Builder()
             .setAudioAttributes(
                 AudioAttributes.Builder()
@@ -62,10 +132,10 @@ class TonePlayer @Inject constructor(
             .setTransferMode(AudioTrack.MODE_STATIC)
             .build()
 
-        track.write(sample, 0, sample.size)
+        track.write(pcm, 0, pcm.size)
         track.play()
 
-        Thread.sleep(durationMs.toLong())
+        Thread.sleep((samples.size.toLong() * 1000) / SAMPLE_RATE)
 
         track.stop()
         track.release()

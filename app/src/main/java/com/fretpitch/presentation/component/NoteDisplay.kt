@@ -17,9 +17,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.fretpitch.R
 import com.fretpitch.domain.model.Exercise
+import com.fretpitch.presentation.util.nameResId
 
 @Composable
 fun NoteDisplay(
@@ -48,21 +51,21 @@ fun NoteDisplay(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = currentExercise.note.displayName,
+                        text = stringResource(currentExercise.note.nameResId()),
                         style = MaterialTheme.typography.displayLarge,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Light
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Cuerda ${currentExercise.guitarString.number}",
+                        text = stringResource(R.string.string_format, currentExercise.guitarString.number),
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
             } else {
                 Text(
-                    text = "Pulsa Play",
+                    text = stringResource(R.string.press_play),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 )

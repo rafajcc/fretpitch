@@ -13,8 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.fretpitch.R
 
 @Composable
 fun SpeedControl(
@@ -33,7 +35,7 @@ fun SpeedControl(
         IconButton(onClick = onSpeedDown) {
             Icon(
                 Icons.Default.KeyboardArrowDown,
-                contentDescription = "Bajar velocidad",
+                contentDescription = stringResource(R.string.speed_down),
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
         }
@@ -49,7 +51,7 @@ fun SpeedControl(
         IconButton(onClick = onSpeedUp) {
             Icon(
                 Icons.Default.KeyboardArrowUp,
-                contentDescription = "Subir velocidad",
+                contentDescription = stringResource(R.string.speed_up),
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
         }

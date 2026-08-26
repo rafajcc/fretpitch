@@ -25,7 +25,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.fretpitch.R
 import com.fretpitch.presentation.model.FeedbackState
 
 @Composable
@@ -77,8 +79,8 @@ fun FeedbackOverlay(
                         else -> Icons.Default.Check
                     },
                     contentDescription = when (feedback) {
-                        is FeedbackState.Correct -> "Correcto"
-                        is FeedbackState.Incorrect -> "Incorrecto"
+                        is FeedbackState.Correct -> stringResource(R.string.feedback_correct)
+                        is FeedbackState.Incorrect -> stringResource(R.string.feedback_incorrect)
                         else -> ""
                     },
                     modifier = Modifier.padding(32.dp),

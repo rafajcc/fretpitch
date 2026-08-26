@@ -1,0 +1,80 @@
+<resources>
+    <string name="app_name">FretPitch</string>
+
+    <!-- Mode selector -->
+    <string name="mode_one_note">One note</string>
+    <string name="mode_one_string">One string</string>
+    <string name="mode_all">All</string>
+    <string name="label_sharps">Sharps (#)</string>
+    <string name="label_note">Note</string>
+    <string name="label_string">String</string>
+    <string name="string_format">String %d</string>
+
+    <!-- Note display -->
+    <string name="press_play">Press Play</string>
+
+    <!-- Note names -->
+    <string name="note_C">C</string>
+    <string name="note_C_SHARP">C#</string>
+    <string name="note_D">D</string>
+    <string name="note_D_SHARP">D#</string>
+    <string name="note_E">E</string>
+    <string name="note_F">F</string>
+    <string name="note_F_SHARP">F#</string>
+    <string name="note_G">G</string>
+    <string name="note_G_SHARP">G#</string>
+    <string name="note_A">A</string>
+    <string name="note_A_SHARP">A#</string>
+    <string name="note_B">B</string>
+
+    <!-- Speed control -->
+    <string name="speed_down">Decrease speed</string>
+    <string name="speed_up">Increase speed</string>
+
+    <!-- Play/Stop -->
+    <string name="play">Play</string>
+    <string name="stop">Stop</string>
+
+    <!-- Stats -->
+    <string name="results">Results</string>
+    <string name="time_format">Time: %s</string>
+    <string name="correct_count">Correct</string>
+    <string name="incorrect_count">Misses</string>
+    <string name="accuracy">Accuracy</string>
+    <string name="by_note">By note</string>
+    <string name="by_string">By string</string>
+    <string name="by_combination">By combination</string>
+    <string name="combination_format">%s - String %d</string>
+    <string name="close">Close</string>
+
+    <!-- Permission -->
+    <string name="mic_permission_title">Microphone permission required</string>
+    <string name="mic_permission_description">FretPitch needs microphone access to detect the musical notes you play on the guitar.</string>
+    <string name="mic_permission_rationale">Without microphone permission, the app cannot function. Please grant the permission from the application settings.</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="grant_permission">Grant Permission</string>
+
+    <!-- Feedback -->
+    <string name="feedback_correct">Correct</string>
+    <string name="feedback_incorrect">Incorrect</string>
+
+    <!-- Version -->
+    <string name="version_label">Version 3.0 - by rafajcc &amp; Vera Technology</string>
+
+    <!-- Language -->
+    <string name="language">Language</string>
+
+    <!-- Navigation -->
+    <string name="nav_practice">Practice</string>
+    <string name="nav_tuner">Tuner</string>
+
+    <!-- Tuner -->
+    <string name="tuner_title">Tuner</string>
+    <string name="tuner_start">Start</string>
+    <string name="tuner_stop">Stop</string>
+    <string name="tuner_no_signal">No signal</string>
+    <string name="tuner_in_tune">In tune</string>
+    <string name="tuner_too_low">Flat</string>
+    <string name="tuner_too_high">Sharp</string>
+    <string name="tuner_string_label">String %d</string>
+</resources>

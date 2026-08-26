@@ -15,6 +15,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.fretpitch.R
 import com.fretpitch.domain.model.SessionResult
 import com.fretpitch.presentation.component.StatsPanel
 
@@ -39,7 +41,7 @@ fun StatsScreen(
                     ) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Cerrar"
+                            contentDescription = stringResource(R.string.close)
                         )
                     }
                 }

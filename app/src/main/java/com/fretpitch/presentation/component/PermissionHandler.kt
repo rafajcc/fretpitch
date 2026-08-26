@@ -25,8 +25,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.fretpitch.R
 
 @Composable
 fun PermissionHandler(
@@ -58,7 +60,7 @@ fun PermissionHandler(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Permiso de micrófono requerido",
+                text = stringResource(R.string.mic_permission_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
@@ -67,7 +69,7 @@ fun PermissionHandler(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "FretPitch necesita acceso al micrófono para detectar las notas musicales que tocas en la guitarra.",
+                text = stringResource(R.string.mic_permission_description),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
@@ -77,7 +79,7 @@ fun PermissionHandler(
 
             if (shouldShowRationale) {
                 Text(
-                    text = "Sin el permiso de micrófono, la app no puede funcionar. Por favor, concede el permiso desde la configuración de la aplicación.",
+                    text = stringResource(R.string.mic_permission_rationale),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center
@@ -96,7 +98,7 @@ fun PermissionHandler(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Text("Abrir Configuración")
+                    Text(stringResource(R.string.open_settings))
                 }
             } else {
                 Button(
@@ -105,7 +107,7 @@ fun PermissionHandler(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Text("Conceder Permiso")
+                    Text(stringResource(R.string.grant_permission))
                 }
             }
         }
