@@ -15,9 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -77,7 +76,7 @@ fun TunerScreen(
                         onBack()
                     }) {
                         Icon(
-                            Icons.Default.ArrowBack,
+                            Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.close)
                         )
                     }
@@ -177,7 +176,7 @@ fun TunerScreen(
                         Spacer(modifier = Modifier.height(60.dp))
 
                         Icon(
-                            Icons.Default.Mic,
+                            painter = painterResource(R.drawable.ic_mic),
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = TextSecondary.copy(alpha = 0.5f)
@@ -203,7 +202,7 @@ fun TunerScreen(
                         Spacer(modifier = Modifier.height(60.dp))
 
                         Icon(
-                            Icons.Default.MicOff,
+                            painter = painterResource(R.drawable.ic_mic_off),
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = TextSecondary.copy(alpha = 0.3f)
@@ -249,7 +248,11 @@ fun TunerScreen(
                     )
                 ) {
                     Icon(
-                        imageVector = if (tunerState.isListening) Icons.Default.MicOff else Icons.Default.Mic,
+                        painter = if (tunerState.isListening) {
+                            painterResource(R.drawable.ic_mic_off)
+                        } else {
+                            painterResource(R.drawable.ic_mic)
+                        },
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(8.dp))

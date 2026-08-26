@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.log2
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 @HiltViewModel
@@ -103,9 +104,5 @@ class TunerViewModel @Inject constructor(
 
     private fun findMatchingString(midiNote: Int): GuitarString? {
         return GuitarString.all().find { it.openNoteMidi == midiNote }
-    }
-
-    private fun Float.pow(exponent: Float): Float {
-        return kotlin.math.pow(this.toDouble(), exponent.toDouble()).toFloat()
     }
 }

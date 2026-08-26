@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +34,7 @@ fun SpeedControl(
     ) {
         IconButton(onClick = onSpeedDown) {
             Icon(
-                Icons.Default.KeyboardArrowDown,
+                Icons.Default.ArrowDropDown,
                 contentDescription = stringResource(R.string.speed_down),
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -50,7 +50,7 @@ fun SpeedControl(
 
         IconButton(onClick = onSpeedUp) {
             Icon(
-                Icons.Default.KeyboardArrowUp,
+                Icons.Default.ArrowDropUp,
                 contentDescription = stringResource(R.string.speed_up),
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )

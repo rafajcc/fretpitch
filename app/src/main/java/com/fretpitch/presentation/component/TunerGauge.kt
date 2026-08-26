@@ -14,6 +14,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -67,7 +68,7 @@ fun TunerGauge(
         val totalSweep = sweepAngle
 
         drawArc(
-            brush = Brush.sweepAngularGradient(
+            brush = Brush.sweepGradient(
                 colors = listOf(
                     AccentRed,
                     Color(0xFFFFB74D),
@@ -75,8 +76,7 @@ fun TunerGauge(
                     Color(0xFFFFB74D),
                     AccentRed
                 ),
-                startAngle = startAngle,
-                endAngle = startAngle + totalSweep
+                center = Offset(centerX, centerY)
             ),
             startAngle = startAngle,
             sweepAngle = totalSweep,
@@ -88,17 +88,7 @@ fun TunerGauge(
 
         val neutralColor = DarkSurfaceVariant
         drawArc(
-            brush = Brush.sweepAngularGradient(
-                colors = listOf(
-                    neutralColor,
-                    neutralColor,
-                    neutralColor,
-                    neutralColor,
-                    neutralColor
-                ),
-                startAngle = startAngle,
-                endAngle = startAngle + totalSweep
-            ),
+            brush = SolidColor(neutralColor),
             startAngle = startAngle,
             sweepAngle = totalSweep,
             useCenter = false,
