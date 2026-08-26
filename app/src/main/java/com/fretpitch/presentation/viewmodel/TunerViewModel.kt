@@ -37,6 +37,7 @@ class TunerViewModel @Inject constructor(
         private const val A4_MIDI = 69
         private const val GUITAR_MIN_FREQUENCY = 75f
         private const val GUITAR_MAX_FREQUENCY = 1100f
+        private const val MIN_AMPLITUDE = 0.04f
     }
 
     fun startListening() {
@@ -49,7 +50,8 @@ class TunerViewModel @Inject constructor(
             pitchDetector.pitchResults().collect { result ->
                 if (result.frequency < GUITAR_MIN_FREQUENCY ||
                     result.frequency > GUITAR_MAX_FREQUENCY ||
-                    result.confidence < 0.3f
+                    result.confidence < 0.3f ||
+                    result.amplitude < MIN_AMPLITUDE
                 ) {
                     return@collect
                 }

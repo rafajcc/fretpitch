@@ -40,6 +40,12 @@ class MainViewModel @Inject constructor(
     private var exerciseJob: Job? = null
     private var pitchCollectionJob: Job? = null
 
+    companion object {
+        private const val MIN_AMPLITUDE = 0.02f
+        private const val POLL_INTERVAL_MS = 50L
+        private const val FEEDBACK_DISPLAY_MS = 500L
+    }
+
     fun setMode(mode: AppMode) {
         if (_uiState.value.isPlaying) return
         _uiState.update { it.copy(mode = mode) }
@@ -124,11 +130,17 @@ class MainViewModel @Inject constructor(
                     )
                 }
 
-                delay(_uiState.value.intervalMs)
+                val deadline = System.currentTimeMillis() + _uiState.value.intervalMs
+                while (isActive && System.currentTimeMillis() < deadline) {
+                    if (_uiState.value.feedback != FeedbackState.Listening) break
+                    delay(POLL_INTERVAL_MS)
+                }
 
                 if (_uiState.value.feedback == FeedbackState.Listening) {
                     handleResult(false)
                 }
+
+                delay(FEEDBACK_DISPLAY_MS)
             }
         }
     }
@@ -136,8 +148,10 @@ class MainViewModel @Inject constructor(
     private fun startPitchCollection() {
         pitchCollectionJob = viewModelScope.launch {
             pitchDetector.pitchResults().collect { result ->
-                val exercise = _uiState.value.currentExercise ?: return@collect
                 if (_uiState.value.feedback != FeedbackState.Listening) return@collect
+                if (result.amplitude < MIN_AMPLITUDE) return@collect
+
+                val exercise = _uiState.value.currentExercise ?: return@collect
 
                 if (frequencyMapper.isNoteCorrect(result.frequency, exercise.expectedFrequency)) {
                     handleResult(true)
@@ -146,7 +160,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private suspend fun handleResult(correct: Boolean) {
+    private fun handleResult(correct: Boolean) {
         val exercise = _uiState.value.currentExercise ?: return
 
         _uiState.update {
@@ -161,7 +175,5 @@ class MainViewModel @Inject constructor(
         } else {
             tonePlayer.playIncorrect()
         }
-
-        delay(500)
     }
 }

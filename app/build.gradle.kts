@@ -14,8 +14,8 @@ android {
         applicationId = "com.fretpitch"
         minSdk = 33
         targetSdk = 34
-        versionCode = 5
-        versionName = "3.1.1"
+        versionCode = 6
+        versionName = "3.1.2"
     }
 
     buildTypes {
@@ -41,7 +41,7 @@ android {
     applicationVariants.all {
         outputs.all {
             val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output.outputFileName = "fretpitch_v3.1.1.apk"
+            output.outputFileName = "fretpitch_v3.1.2.apk"
         }
     }
 }

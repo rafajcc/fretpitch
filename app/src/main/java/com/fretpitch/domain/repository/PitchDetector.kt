@@ -10,5 +10,6 @@ interface PitchDetector {
 
 data class PitchResult(
     val frequency: Float,
-    val confidence: Float
+    val confidence: Float,
+    val amplitude: Float
 )

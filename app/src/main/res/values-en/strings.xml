@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FretPitch</string>
+    <string name="app_name">Guitar Fret Pitch</string>
 
     <!-- Mode selector -->
     <string name="mode_one_note">One note</string>
@@ -59,7 +59,7 @@
     <string name="feedback_incorrect">Incorrect</string>
 
     <!-- Version -->
-    <string name="version_label">Version 3.1.1 - by rafajcc &amp; Vera Technology</string>
+    <string name="version_label">Version 3.1.2 - by rafajcc &amp; Vera Technology</string>
 
     <!-- Language -->
     <string name="language">Language</string>

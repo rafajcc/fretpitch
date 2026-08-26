@@ -105,7 +105,7 @@ fun MainScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "FretPitch",
+                            text = "Guitar Fret Pitch",
                             style = MaterialTheme.typography.headlineMedium
                         )
                     }

@@ -28,6 +28,7 @@ class PitchDetectorImpl @Inject constructor(
         private const val MIN_FREQUENCY = 80f
         private const val MAX_FREQUENCY = 1100f
         private const val CONFIDENCE_THRESHOLD = 0.4f
+        private const val MIN_AMPLITUDE = 0.015f
     }
 
     override fun start() {
@@ -61,6 +62,13 @@ class PitchDetectorImpl @Inject constructor(
         if (buffer.size < 2) return null
 
         val floatBuffer = FloatArray(buffer.size) { buffer[it] / 32768f }
+
+        var sumSquares = 0f
+        for (sample in floatBuffer) {
+            sumSquares += sample * sample
+        }
+        val rms = sqrt(sumSquares / floatBuffer.size)
+        if (rms < MIN_AMPLITUDE) return null
 
         val windowed = FloatArray(floatBuffer.size) { i ->
             val window = 0.5f * (1f - kotlin.math.cos(
@@ -104,7 +112,8 @@ class PitchDetectorImpl @Inject constructor(
 
         return PitchResult(
             frequency = frequency,
-            confidence = bestValue
+            confidence = bestValue,
+            amplitude = rms
         )
     }
 
