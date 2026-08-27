@@ -6,7 +6,9 @@ data class TunerState(
     val centsOffset: Float = 0f,
     val matchedString: GuitarString? = null,
     val confidence: Float = 0f,
-    val isListening: Boolean = false
+    val isListening: Boolean = false,
+    val lastUpdateTimeMs: Long = 0L,
+    val isStringTuned: Boolean = false
 ) {
     val isInTune: Boolean
         get() = detectedNote != null && kotlin.math.abs(centsOffset) <= 5f

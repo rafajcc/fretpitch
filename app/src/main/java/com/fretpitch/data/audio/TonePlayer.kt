@@ -31,6 +31,41 @@ class TonePlayer @Inject constructor(
         playMutedBlip()
     }
 
+    suspend fun playStringTuned() = withContext(Dispatchers.IO) {
+        playTunedConfirmation()
+    }
+
+    private fun playTunedConfirmation() {
+        val durationMs = 250
+        val numSamples = SAMPLE_RATE * durationMs / 1000
+        val sample = FloatArray(numSamples)
+
+        val freqs = floatArrayOf(523.25f, 659.25f, 783.99f, 1046.5f)
+
+        for (i in 0 until numSamples) {
+            val t = i.toFloat() / SAMPLE_RATE
+            val envelope = computeEnvelope(i, numSamples, 5, 20, 60)
+
+            var value = 0f
+            for ((idx, freq) in freqs.withIndex()) {
+                val delay = idx * 0.03f
+                val tDelayed = t - delay
+                if (tDelayed > 0f) {
+                    val partialEnvelope = computeEnvelope(
+                        (tDelayed * SAMPLE_RATE).toInt(),
+                        numSamples, 5, 20, 60
+                    )
+                    value += sin(2.0 * PI * freq * tDelayed).toFloat() * (0.25f - idx * 0.04f) * partialEnvelope
+                }
+            }
+
+            val shimmer = 0.85f + 0.15f * sin(2.0 * PI * 12f * t).toFloat()
+            sample[i] = (value * envelope * shimmer * 0.5f).coerceIn(-1f, 1f)
+        }
+
+        playSamples(sample)
+    }
+
     private fun playPleasantChime() {
         val durationMs = 180
         val numSamples = SAMPLE_RATE * durationMs / 1000

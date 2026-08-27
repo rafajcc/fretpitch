@@ -59,7 +59,7 @@
     <string name="feedback_incorrect">Incorrecto</string>
 
     <!-- Version -->
-    <string name="version_label">Versión 3.1.2 - por rafajcc &amp; Vera Technology</string>
+    <string name="version_label">Versión 3.1.3 - por rafajcc &amp; Vera Technology</string>
 
     <!-- Language -->
     <string name="language">Idioma</string>
@@ -77,4 +77,5 @@
     <string name="tuner_too_low">Bemol</string>
     <string name="tuner_too_high">Sostenido</string>
     <string name="tuner_string_label">Cuerda %d</string>
+    <string name="tuner_string_tuned">Cuerda %d afinada</string>
 </resources>
