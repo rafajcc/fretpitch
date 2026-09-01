@@ -6,8 +6,6 @@ import com.fretpitch.data.audio.TonePlayer
 import com.fretpitch.data.mapper.FrequencyMapper
 import com.fretpitch.domain.model.AppMode
 import com.fretpitch.domain.model.Exercise
-import com.fretpitch.domain.model.GuitarString
-import com.fretpitch.domain.model.Note
 import com.fretpitch.domain.repository.PitchDetector
 import com.fretpitch.domain.usecase.CalculateStatsUseCase
 import com.fretpitch.domain.usecase.ExerciseAttempt
@@ -40,8 +38,14 @@ class MainViewModel @Inject constructor(
     private var exerciseJob: Job? = null
     private var pitchCollectionJob: Job? = null
 
+    private var wrongNoteRepeats = 0
+    private var lastWrongMidi: Int? = null
+
     companion object {
         private const val MIN_AMPLITUDE = 0.02f
+        private const val PLAYED_NOTE_AMPLITUDE = 0.03f
+        private const val PLAYED_NOTE_CONFIDENCE = 0.5f
+        private const val WRONG_NOTE_REPEATS = 2
         private const val POLL_INTERVAL_MS = 50L
         private const val FEEDBACK_DISPLAY_MS = 500L
     }
@@ -154,7 +158,33 @@ class MainViewModel @Inject constructor(
                 val exercise = _uiState.value.currentExercise ?: return@collect
 
                 if (frequencyMapper.isNoteCorrect(result.frequency, exercise.expectedFrequency)) {
+                    wrongNoteRepeats = 0
+                    lastWrongMidi = null
                     handleResult(true)
+                    return@collect
+                }
+
+                val midi = frequencyMapper.frequencyToMidiNote(result.frequency)
+                if (midi == null) return@collect
+
+                if (result.amplitude >= PLAYED_NOTE_AMPLITUDE &&
+                    result.confidence >= PLAYED_NOTE_CONFIDENCE
+                ) {
+                    if (midi == lastWrongMidi) {
+                        wrongNoteRepeats++
+                    } else {
+                        wrongNoteRepeats = 1
+                        lastWrongMidi = midi
+                    }
+
+                    if (wrongNoteRepeats >= WRONG_NOTE_REPEATS) {
+                        wrongNoteRepeats = 0
+                        lastWrongMidi = null
+                        handleResult(false)
+                    }
+                } else {
+                    wrongNoteRepeats = 0
+                    lastWrongMidi = midi
                 }
             }
         }

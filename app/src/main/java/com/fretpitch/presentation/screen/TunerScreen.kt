@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fretpitch.R
+import com.fretpitch.presentation.component.TunedStringsBar
 import com.fretpitch.presentation.component.TunerGauge
 import com.fretpitch.presentation.theme.AccentGreen
 import com.fretpitch.presentation.theme.AccentRed
@@ -111,6 +112,11 @@ fun TunerScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.weight(1f)
                 ) {
+                    TunedStringsBar(
+                        tunedStrings = tunerState.tunedStrings,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
                     if (tunerState.isListening && tunerState.detectedNote != null) {
                         Text(
                             text = tunerState.noteNameDisplay,
@@ -167,6 +173,11 @@ fun TunerScreen(
 
                         Text(
                             text = when {
+                                tunerState.isInTune && tunerState.matchedString != null ->
+                                    stringResource(
+                                        R.string.tuner_string_tuned,
+                                        tunerState.matchedString!!.number
+                                    )
                                 tunerState.isInTune -> stringResource(R.string.tuner_in_tune)
                                 tunerState.centsOffset < 0 -> stringResource(R.string.tuner_too_low)
                                 else -> stringResource(R.string.tuner_too_high)

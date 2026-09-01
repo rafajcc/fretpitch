@@ -1,8 +1,7 @@
 package com.fretpitch.presentation.component
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -10,21 +9,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.dp
-import com.fretpitch.presentation.theme.AccentBlue
+import com.fretpitch.presentation.theme.AccentAmber
 import com.fretpitch.presentation.theme.AccentGreen
 import com.fretpitch.presentation.theme.AccentRed
 import com.fretpitch.presentation.theme.DarkSurfaceVariant
-import com.fretpitch.presentation.theme.TextSecondary
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 @Composable
 fun TunerGauge(
@@ -38,109 +33,64 @@ fun TunerGauge(
     LaunchedEffect(clampedCents) {
         animatedOffset.animateTo(
             targetValue = clampedCents,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
+            animationSpec = tween(durationMillis = 80)
         )
     }
 
-    val tuneColor = when {
-        isInTune -> AccentGreen
-        abs(clampedCents) <= 15f -> Color(0xFFFFB74D)
-        else -> AccentRed
-    }
+    val ledCount = 21
+    val centerIndex = ledCount / 2
+    val stepCents = 5f
+    val targetLed = centerIndex + (animatedOffset.value / stepCents)
+        .roundToInt()
+        .coerceIn(-centerIndex, centerIndex)
 
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(200.dp)
+            .height(72.dp)
     ) {
-        val canvasWidth = size.width
-        val canvasHeight = size.height
-        val centerX = canvasWidth / 2f
-        val centerY = canvasHeight * 0.85f
-        val radius = canvasWidth * 0.38f
-        val strokeWidth = 12.dp.toPx()
+        val ledWidth = size.width / ledCount
+        val gap = ledWidth * 0.22f
+        val ledWidthActual = ledWidth - gap
+        val ledHeight = size.height * 0.6f
+        val topLeftY = (size.height - ledHeight) / 2f
+        val cornerRadius = CornerRadius(ledWidthActual * 0.3f, ledWidthActual * 0.3f)
 
-        val startAngle = 150f
-        val sweepAngle = 240f
-        val totalSweep = sweepAngle
+        for (i in 0 until ledCount) {
+            val distance = abs(i - centerIndex)
+            val x = i * ledWidth + gap / 2f
 
-        drawArc(
-            brush = Brush.sweepGradient(
-                colors = listOf(
-                    AccentRed,
-                    Color(0xFFFFB74D),
-                    AccentGreen,
-                    Color(0xFFFFB74D),
-                    AccentRed
-                ),
-                center = Offset(centerX, centerY)
-            ),
-            startAngle = startAngle,
-            sweepAngle = totalSweep,
-            useCenter = false,
-            topLeft = Offset(centerX - radius, centerY - radius),
-            size = Size(radius * 2, radius * 2),
-            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-        )
+            val isLit: Boolean
+            val ledColor: Color
 
-        val neutralColor = DarkSurfaceVariant
-        drawArc(
-            brush = SolidColor(neutralColor),
-            startAngle = startAngle,
-            sweepAngle = totalSweep,
-            useCenter = false,
-            topLeft = Offset(centerX - radius, centerY - radius),
-            size = Size(radius * 2, radius * 2),
-            style = Stroke(width = strokeWidth * 0.3f, cap = StrokeCap.Round)
-        )
-
-        for (cents in -50..50 step 10) {
-            val fraction = (cents + 50f) / 100f
-            val angle = startAngle + fraction * totalSweep
-            val isMajor = cents % 25 == 0
-            val innerRadius = if (isMajor) radius - strokeWidth * 1.2f else radius - strokeWidth * 0.8f
-            val outerRadius = radius + strokeWidth * 0.5f
-
-            rotate(angle - 180f, pivot = Offset(centerX, centerY)) {
-                drawLine(
-                    color = if (cents == 0) AccentGreen else TextSecondary.copy(alpha = 0.5f),
-                    start = Offset(centerX, centerY + innerRadius),
-                    end = Offset(centerX, centerY + outerRadius),
-                    strokeWidth = if (isMajor) 3.dp.toPx() else 1.5.dp.toPx(),
-                    cap = StrokeCap.Round
-                )
+            if (isInTune) {
+                isLit = distance <= 1
+                ledColor = AccentGreen
+            } else {
+                isLit = when {
+                    targetLed > centerIndex -> i in centerIndex..targetLed
+                    targetLed < centerIndex -> i in targetLed..centerIndex
+                    else -> false
+                }
+                ledColor = when {
+                    distance == 0 -> AccentGreen
+                    distance <= 2 -> AccentAmber
+                    else -> AccentRed
+                }
             }
-        }
 
-        val needleFraction = (animatedOffset.value + 50f) / 100f
-        val needleAngle = startAngle + needleFraction * totalSweep - 180f
-
-        val needleLength = radius * 0.85f
-        val needleBaseWidth = 4.dp.toPx()
-
-        rotate(needleAngle, pivot = Offset(centerX, centerY)) {
-            drawLine(
-                color = tuneColor,
-                start = Offset(centerX, centerY),
-                end = Offset(centerX, centerY - needleLength),
-                strokeWidth = needleBaseWidth,
-                cap = StrokeCap.Round
-            )
-
-            drawCircle(
-                color = tuneColor,
-                radius = needleBaseWidth * 2f,
-                center = Offset(centerX, centerY)
+            drawRoundRect(
+                color = if (isLit) ledColor else DarkSurfaceVariant,
+                topLeft = Offset(x, topLeftY),
+                size = Size(ledWidthActual, ledHeight),
+                cornerRadius = cornerRadius
             )
         }
 
         drawCircle(
-            color = Color.DarkGray,
-            radius = strokeWidth * 0.8f,
-            center = Offset(centerX, centerY)
+            color = if (isInTune) AccentGreen else Color.Gray,
+            radius = ledWidthActual * 0.5f,
+            center = Offset(size.width / 2f, size.height - ledWidthActual * 0.6f)
         )
     }
 }

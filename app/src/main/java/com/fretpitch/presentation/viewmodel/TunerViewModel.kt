@@ -44,6 +44,7 @@ class TunerViewModel @Inject constructor(
         private const val GUITAR_MAX_FREQUENCY = 1100f
         private const val MIN_AMPLITUDE = 0.018f
         private const val SILENCE_TIMEOUT_MS = 350L
+        private const val TUNED_HOLD_MS = 2500L
     }
 
     fun startListening() {
@@ -71,6 +72,14 @@ class TunerViewModel @Inject constructor(
                 val inTune = abs(cents) <= 5f
                 val justTuned = matchedString != null && inTune && matchedString != lastTunedString
 
+                if (matchedString != null && inTune &&
+                    matchedString !in _tunerState.value.tunedStrings
+                ) {
+                    _tunerState.update {
+                        it.copy(tunedStrings = it.tunedStrings + matchedString)
+                    }
+                }
+
                 lastTunedString = matchedString?.takeIf { inTune }
 
                 _tunerState.update {
@@ -89,7 +98,7 @@ class TunerViewModel @Inject constructor(
                     viewModelScope.launch { tonePlayer.playStringTuned() }
                 }
 
-                resetSilenceTimer()
+                resetSilenceTimer(if (matchedString != null && inTune) TUNED_HOLD_MS else SILENCE_TIMEOUT_MS)
             }
         }
     }
@@ -110,20 +119,24 @@ class TunerViewModel @Inject constructor(
                 matchedString = null,
                 confidence = 0f,
                 lastUpdateTimeMs = 0L,
-                isStringTuned = false
+                isStringTuned = false,
+                tunedStrings = emptySet()
             )
         }
     }
 
-    private fun resetSilenceTimer() {
+    private fun resetSilenceTimer(holdMs: Long) {
         silenceJob?.cancel()
         silenceJob = viewModelScope.launch {
-            delay(SILENCE_TIMEOUT_MS)
+            delay(holdMs)
             if (isActive) {
                 _tunerState.update {
                     it.copy(
+                        detectedFrequency = 0f,
+                        detectedNote = null,
                         centsOffset = 0f,
                         matchedString = null,
+                        confidence = 0f,
                         isStringTuned = false
                     )
                 }
