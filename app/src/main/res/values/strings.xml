@@ -44,7 +44,7 @@
     <string name="by_note">Por nota</string>
     <string name="by_string">Por cuerda</string>
     <string name="by_combination">Por combinación</string>
-    <string name="combination_format">%s - Cuerda %d</string>
+    <string name="combination_format" formatted="false">%1$s - Cuerda %2$d</string>
     <string name="close">Cerrar</string>
 
     <!-- Permission -->

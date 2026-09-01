@@ -44,7 +44,7 @@
     <string name="by_note">By note</string>
     <string name="by_string">By string</string>
     <string name="by_combination">By combination</string>
-    <string name="combination_format">%s - String %d</string>
+    <string name="combination_format" formatted="false">%1$s - String %2$d</string>
     <string name="close">Close</string>
 
     <!-- Permission -->
