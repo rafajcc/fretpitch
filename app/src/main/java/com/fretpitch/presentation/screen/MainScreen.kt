@@ -50,6 +50,9 @@ import com.fretpitch.presentation.component.ModeSelector
 import com.fretpitch.presentation.component.NoteDisplay
 import com.fretpitch.presentation.component.PermissionHandler
 import com.fretpitch.presentation.component.SpeedControl
+import com.fretpitch.presentation.theme.AccentGreen
+import com.fretpitch.presentation.theme.TextSecondary
+import com.fretpitch.presentation.util.nameResId
 import com.fretpitch.presentation.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -230,6 +233,37 @@ fun MainScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         textAlign = TextAlign.Center
                     )
+                }
+
+                if (uiState.isPlaying) {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.detected_note_label),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextSecondary.copy(alpha = 0.6f)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        val detectedNote = uiState.detectedNote
+                        val noteText = detectedNote?.let { stringResource(it.nameResId()) } ?: "—"
+                        val stringText = uiState.detectedString?.let {
+                            stringResource(R.string.string_format, it.number)
+                        }
+                        Text(
+                            text = if (stringText != null) "$noteText · $stringText" else noteText,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = if (detectedNote != null &&
+                                detectedNote == uiState.currentExercise?.note
+                            ) {
+                                AccentGreen
+                            } else {
+                                TextSecondary
+                            }
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))

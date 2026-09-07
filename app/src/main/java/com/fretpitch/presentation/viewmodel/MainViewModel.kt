@@ -6,6 +6,7 @@ import com.fretpitch.data.audio.TonePlayer
 import com.fretpitch.data.mapper.FrequencyMapper
 import com.fretpitch.domain.model.AppMode
 import com.fretpitch.domain.model.Exercise
+import com.fretpitch.domain.model.GuitarString
 import com.fretpitch.domain.repository.PitchDetector
 import com.fretpitch.domain.usecase.CalculateStatsUseCase
 import com.fretpitch.domain.usecase.ExerciseAttempt
@@ -85,6 +86,8 @@ class MainViewModel @Inject constructor(
                 isPlaying = true,
                 attempts = emptyList(),
                 sessionResult = null,
+                detectedNote = null,
+                detectedString = null,
                 startTimeMs = System.currentTimeMillis()
             )
         }
@@ -110,7 +113,9 @@ class MainViewModel @Inject constructor(
                 isPlaying = false,
                 currentExercise = null,
                 feedback = FeedbackState.None,
-                sessionResult = result
+                sessionResult = result,
+                detectedNote = null,
+                detectedString = null
             )
         }
     }
@@ -152,8 +157,21 @@ class MainViewModel @Inject constructor(
     private fun startPitchCollection() {
         pitchCollectionJob = viewModelScope.launch {
             pitchDetector.pitchResults().collect { result ->
-                if (_uiState.value.feedback != FeedbackState.Listening) return@collect
                 if (result.amplitude < MIN_AMPLITUDE) return@collect
+
+                val midi = frequencyMapper.frequencyToMidiNote(result.frequency)
+                val detected = midi?.let { frequencyMapper.midiNoteToNote(it) }
+                val detectedGuitarString = midi?.let { midiNote ->
+                    GuitarString.all().find { it.openNoteMidi == midiNote }
+                }
+                _uiState.update {
+                    it.copy(
+                        detectedNote = detected,
+                        detectedString = detectedGuitarString
+                    )
+                }
+
+                if (_uiState.value.feedback != FeedbackState.Listening) return@collect
 
                 val exercise = _uiState.value.currentExercise ?: return@collect
 
@@ -164,17 +182,17 @@ class MainViewModel @Inject constructor(
                     return@collect
                 }
 
-                val midi = frequencyMapper.frequencyToMidiNote(result.frequency)
-                if (midi == null) return@collect
+                val wrongMidi = frequencyMapper.frequencyToMidiNote(result.frequency)
+                if (wrongMidi == null) return@collect
 
                 if (result.amplitude >= PLAYED_NOTE_AMPLITUDE &&
                     result.confidence >= PLAYED_NOTE_CONFIDENCE
                 ) {
-                    if (midi == lastWrongMidi) {
+                    if (wrongMidi == lastWrongMidi) {
                         wrongNoteRepeats++
                     } else {
                         wrongNoteRepeats = 1
-                        lastWrongMidi = midi
+                        lastWrongMidi = wrongMidi
                     }
 
                     if (wrongNoteRepeats >= WRONG_NOTE_REPEATS) {
@@ -184,7 +202,7 @@ class MainViewModel @Inject constructor(
                     }
                 } else {
                     wrongNoteRepeats = 0
-                    lastWrongMidi = midi
+                    lastWrongMidi = wrongMidi
                 }
             }
         }

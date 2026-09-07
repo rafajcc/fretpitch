@@ -59,7 +59,10 @@
     <string name="feedback_incorrect">Incorrect</string>
 
     <!-- Version -->
-    <string name="version_label">Version 3.2.0 - by rafajcc &amp; Vera Technology</string>
+    <string name="version_label">Version 3.2.1 - by rafajcc &amp; Vera Technology</string>
+
+    <!-- Detected note -->
+    <string name="detected_note_label">Detected note</string>
 
     <!-- Language -->
     <string name="language">Language</string>

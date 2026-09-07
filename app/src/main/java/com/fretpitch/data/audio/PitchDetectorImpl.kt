@@ -27,8 +27,8 @@ class PitchDetectorImpl @Inject constructor(
     companion object {
         private const val MIN_FREQUENCY = 80f
         private const val MAX_FREQUENCY = 1100f
-        private const val CONFIDENCE_THRESHOLD = 0.4f
-        private const val MIN_AMPLITUDE = 0.015f
+        private const val CONFIDENCE_THRESHOLD = 0.3f
+        private const val MIN_AMPLITUDE = 0.008f
     }
 
     override fun start() {
