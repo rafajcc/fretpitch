@@ -6,6 +6,7 @@ import android.media.AudioFormat
 import android.media.AudioTrack
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,7 +36,7 @@ class TonePlayer @Inject constructor(
         playTunedConfirmation()
     }
 
-    private fun playTunedConfirmation() {
+    private suspend fun playTunedConfirmation() {
         val durationMs = 250
         val numSamples = SAMPLE_RATE * durationMs / 1000
         val sample = FloatArray(numSamples)
@@ -66,7 +67,7 @@ class TonePlayer @Inject constructor(
         playSamples(sample)
     }
 
-    private fun playPleasantChime() {
+    private suspend fun playPleasantChime() {
         val durationMs = 180
         val numSamples = SAMPLE_RATE * durationMs / 1000
         val sample = FloatArray(numSamples)
@@ -92,7 +93,7 @@ class TonePlayer @Inject constructor(
         playSamples(sample)
     }
 
-    private fun playMutedBlip() {
+    private suspend fun playMutedBlip() {
         val durationMs = 120
         val numSamples = SAMPLE_RATE * durationMs / 1000
         val sample = FloatArray(numSamples)
@@ -138,7 +139,7 @@ class TonePlayer @Inject constructor(
         }
     }
 
-    private fun playSamples(samples: FloatArray) {
+    private suspend fun playSamples(samples: FloatArray) {
         val pcm = ShortArray(samples.size) { i ->
             (samples[i] * 32767f).toInt().coerceIn(-32768, 32767).toShort()
         }
@@ -165,7 +166,7 @@ class TonePlayer @Inject constructor(
         track.write(pcm, 0, pcm.size)
         track.play()
 
-        Thread.sleep((samples.size.toLong() * 1000) / SAMPLE_RATE)
+        delay((samples.size.toLong() * 1000) / SAMPLE_RATE)
 
         track.stop()
         track.release()
