@@ -49,7 +49,7 @@ class MainViewModel @Inject constructor(
     companion object {
         private const val MIN_AMPLITUDE = 0.008f
         private const val PLAYED_NOTE_AMPLITUDE = 0.015f
-        private const val PLAYED_NOTE_CONFIDENCE = 0.3f
+        private const val PLAYED_NOTE_CONFIDENCE = 0.15f
         private const val WRONG_NOTE_SUSTAIN_MS = 250L
         private const val POLL_INTERVAL_MS = 50L
         private const val FEEDBACK_DISPLAY_MS = 500L
@@ -203,7 +203,7 @@ class MainViewModel @Inject constructor(
                 if (wrongMidi == null) return@collect
 
                 if (result.amplitude >= PLAYED_NOTE_AMPLITUDE &&
-                    result.confidence >= PLAYED_NOTE_CONFIDENCE
+                    result.confidence <= PLAYED_NOTE_CONFIDENCE
                 ) {
                     val now = System.currentTimeMillis()
                     if (wrongMidi == lastWrongMidi && wrongNoteStartMs > 0L) {

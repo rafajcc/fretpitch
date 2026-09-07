@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -41,7 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fretpitch.R
@@ -50,8 +51,7 @@ import com.fretpitch.presentation.component.ModeSelector
 import com.fretpitch.presentation.component.NoteDisplay
 import com.fretpitch.presentation.component.PermissionHandler
 import com.fretpitch.presentation.component.SpeedControl
-import com.fretpitch.presentation.theme.AccentGreen
-import com.fretpitch.presentation.theme.TextSecondary
+import com.fretpitch.presentation.model.MainUiState
 import com.fretpitch.presentation.util.nameResId
 import com.fretpitch.presentation.viewmodel.MainViewModel
 
@@ -103,13 +103,14 @@ fun MainScreen(
                         Icon(
                             painter = painterResource(R.drawable.ic_launcher_foreground),
                             contentDescription = null,
-                            modifier = Modifier.size(28.dp),
+                            modifier = Modifier.size(32.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Guitar Fret Pitch",
-                            style = MaterialTheme.typography.headlineMedium
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 },
@@ -149,7 +150,8 @@ fun MainScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
@@ -166,126 +168,169 @@ fun MainScreen(
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (!uiState.isPlaying) {
-                    ModeSelector(
-                        currentMode = uiState.mode,
-                        includeSharps = uiState.includeSharps,
-                        onModeChange = { viewModel.setMode(it) },
-                        onSharpsToggle = { viewModel.setIncludeSharps(it) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                Spacer(modifier = Modifier.height(16.dp))
 
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                NoteDisplay(
-                    exercise = uiState.currentExercise,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
+                PracticeSection(
+                    uiState = uiState,
+                    onModeChange = viewModel::setMode,
+                    onSharpsToggle = viewModel::setIncludeSharps,
+                    onSpeedUp = viewModel::increaseSpeed,
+                    onSpeedDown = viewModel::decreaseSpeed,
+                    onPlayStop = {
+                        if (uiState.isPlaying) viewModel.stop() else viewModel.play()
+                    }
                 )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                SpeedControl(
-                    speedLevel = uiState.speedLevel,
-                    onSpeedUp = { viewModel.increaseSpeed() },
-                    onSpeedDown = { viewModel.decreaseSpeed() }
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = {
-                        if (uiState.isPlaying) {
-                            viewModel.stop()
-                        } else {
-                            viewModel.play()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (uiState.isPlaying) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        }
-                    )
-                ) {
-                    Icon(
-                        imageVector = if (uiState.isPlaying) Icons.Default.Close else Icons.Default.PlayArrow,
-                        contentDescription = null
-                    )
-                    Text(
-                        text = if (uiState.isPlaying) stringResource(R.string.stop) else stringResource(R.string.play),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
-
-                if (uiState.isPlaying && uiState.attempts.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "${uiState.attempts.count { it.correct }} / ${uiState.attempts.size}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        textAlign = TextAlign.Center
-                    )
-                }
 
                 if (uiState.isPlaying) {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = stringResource(R.string.detected_note_label),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = TextSecondary.copy(alpha = 0.6f)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        val detectedNote = uiState.detectedNote
-                        val noteText = detectedNote?.let { stringResource(it.nameResId()) } ?: "—"
-                        val stringText = uiState.detectedString?.let {
-                            stringResource(R.string.string_format, it.number)
-                        }
-                        Text(
-                            text = if (stringText != null) "$noteText · $stringText" else noteText,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = if (detectedNote != null &&
-                                detectedNote == uiState.currentExercise?.note
-                            ) {
-                                AccentGreen
-                            } else {
-                                TextSecondary
-                            }
-                        )
-                    }
+                    DetectionInfo(uiState = uiState)
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = stringResource(R.string.version_label),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                    )
-                }
-
+                Spacer(modifier = Modifier.weight(1f))
+                
+                VersionFooter()
+                
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             FeedbackOverlay(
                 feedback = uiState.feedback,
-                modifier = Modifier.padding(top = paddingValues.calculateTopPadding())
+                modifier = Modifier.padding(top = 16.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun PracticeSection(
+    uiState: MainUiState,
+    onModeChange: (com.fretpitch.domain.model.AppMode) -> Unit,
+    onSharpsToggle: (Boolean) -> Unit,
+    onSpeedUp: () -> Unit,
+    onSpeedDown: () -> Unit,
+    onPlayStop: () -> Unit
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        if (!uiState.isPlaying) {
+            ModeSelector(
+                currentMode = uiState.mode,
+                includeSharps = uiState.includeSharps,
+                onModeChange = onModeChange,
+                onSharpsToggle = onSharpsToggle,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        NoteDisplay(
+            exercise = uiState.currentExercise,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        SpeedControl(
+            speedLevel = uiState.speedLevel,
+            onSpeedUp = onSpeedUp,
+            onSpeedDown = onSpeedDown
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = onPlayStop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp),
+            shape = MaterialTheme.shapes.large,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (uiState.isPlaying) {
+                    MaterialTheme.colorScheme.errorContainer
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+                contentColor = if (uiState.isPlaying) {
+                    MaterialTheme.colorScheme.onErrorContainer
+                } else {
+                    MaterialTheme.colorScheme.onPrimary
+                }
+            )
+        ) {
+            Icon(
+                imageVector = if (uiState.isPlaying) Icons.Default.Close else Icons.Default.PlayArrow,
+                contentDescription = null,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = if (uiState.isPlaying) stringResource(R.string.stop) else stringResource(R.string.play),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        if (uiState.isPlaying && uiState.attempts.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Text(
+                    text = "${uiState.attempts.count { it.correct }} / ${uiState.attempts.size}",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetectionInfo(uiState: MainUiState) {
+    Spacer(modifier = Modifier.height(32.dp))
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.detected_note_label),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        val detectedNote = uiState.detectedNote
+        val noteText = detectedNote?.let { stringResource(it.nameResId()) } ?: "—"
+        val stringText = uiState.detectedString?.let {
+            stringResource(R.string.string_format, it.number)
+        }
+        
+        val isCorrect = detectedNote != null && detectedNote == uiState.currentExercise?.note
+        
+        Text(
+            text = if (stringText != null) "$noteText · $stringText" else noteText,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = if (isCorrect) {
+                MaterialTheme.colorScheme.tertiary
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            }
+        )
+    }
+}
+
+@Composable
+private fun VersionFooter() {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.version_label),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+        )
     }
 }

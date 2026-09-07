@@ -27,7 +27,7 @@ class PitchDetectorImpl @Inject constructor(
     companion object {
         private const val MIN_FREQUENCY = 80f
         private const val MAX_FREQUENCY = 1100f
-        private const val CONFIDENCE_THRESHOLD = 0.3f
+        private const val YIN_THRESHOLD = 0.15f
         private const val MIN_AMPLITUDE = 0.008f
     }
 
@@ -70,91 +70,71 @@ class PitchDetectorImpl @Inject constructor(
         val rms = sqrt(sumSquares / floatBuffer.size)
         if (rms < MIN_AMPLITUDE) return null
 
-        val windowed = FloatArray(floatBuffer.size) { i ->
-            val window = 0.5f * (1f - kotlin.math.cos(
-                (2.0 * Math.PI * i / (floatBuffer.size - 1)).toDouble()
-            )).toFloat()
-            floatBuffer[i] * window
-        }
-
+        // YIN Algorithm
         val minLag = (AudioCapture.SAMPLE_RATE / MAX_FREQUENCY).toInt().coerceAtLeast(1)
-        val maxLag = (AudioCapture.SAMPLE_RATE / MIN_FREQUENCY).toInt().coerceAtMost(windowed.size - 1)
+        val maxLag = (AudioCapture.SAMPLE_RATE / MIN_FREQUENCY).toInt().coerceAtMost(floatBuffer.size / 2)
 
-        // Pass 1: find the lag with the maximum normalized correlation.
-        var bestLag = -1
-        var bestValue = 0f
-
-        for (lag in minLag..maxLag) {
-            val normalized = normalizedAutocorrelation(windowed, lag)
-            if (normalized > bestValue) {
-                bestValue = normalized
-                bestLag = lag
+        // Step 1: Difference Function
+        val yinBuffer = FloatArray(maxLag)
+        for (tau in 1 until maxLag) {
+            for (i in 0 until floatBuffer.size - tau) {
+                val delta = floatBuffer[i] - floatBuffer[i + tau]
+                yinBuffer[tau] += delta * delta
             }
         }
 
-        if (bestLag <= 0 || bestValue < CONFIDENCE_THRESHOLD) return null
+        // Step 2: Cumulative Mean Normalized Difference Function
+        yinBuffer[0] = 1f
+        var runningSum = 0f
+        for (tau in 1 until maxLag) {
+            runningSum += yinBuffer[tau]
+            yinBuffer[tau] *= tau / runningSum
+        }
 
-        // Pass 2: harmonic rejection. A guitar note repeats not only at its true
-        // fundamental period but also at integer multiples of it. The 2nd/3rd harmonic
-        // often produces a slightly cleaner correlation peak, pulling the detector to
-        // half/third the period (an octave or more too high). To recover the true
-        // fundamental, pick the LARGEST lag whose correlation is still near the maximum.
-        val acceptRatio = 0.9f
-        var fundamentalLag = bestLag
-        for (lag in bestLag + 1..maxLag) {
-            val v = normalizedAutocorrelation(windowed, lag)
-            if (v >= bestValue * acceptRatio) {
-                fundamentalLag = lag
+        // Step 3: Absolute Threshold
+        var tau = -1
+        for (t in minLag until maxLag) {
+            if (yinBuffer[t] < YIN_THRESHOLD) {
+                tau = t
+                // Find the first local minimum below the threshold
+                while (tau + 1 < maxLag && yinBuffer[tau + 1] < yinBuffer[tau]) {
+                    tau++
+                }
+                break
             }
         }
 
-        val refinedLag = refineLag(windowed, fundamentalLag, minLag, maxLag)
-        val frequency = AudioCapture.SAMPLE_RATE / refinedLag
+        // If no lag was found below threshold, use the global minimum
+        if (tau == -1) {
+            var minVal = 1f
+            for (t in minLag until maxLag) {
+                if (yinBuffer[t] < minVal) {
+                    minVal = yinBuffer[t]
+                    tau = t
+                }
+            }
+        }
+
+        if (tau == -1 || yinBuffer[tau] >= 0.5f) return null
+
+        // Step 4: Parabolic Interpolation
+        val refinedTau = if (tau > 0 && tau < maxLag - 1) {
+            val s0 = yinBuffer[tau - 1]
+            val s1 = yinBuffer[tau]
+            val s2 = yinBuffer[tau + 1]
+            tau + (s2 - s0) / (2f * (2f * s1 - s2 - s0))
+        } else {
+            tau.toFloat()
+        }
+
+        val frequency = AudioCapture.SAMPLE_RATE / refinedTau
 
         if (frequency < MIN_FREQUENCY || frequency > MAX_FREQUENCY) return null
 
         return PitchResult(
             frequency = frequency,
-            confidence = bestValue,
+            confidence = yinBuffer[tau], // In YIN, lower is better confidence
             amplitude = rms
         )
-    }
-
-    private fun normalizedAutocorrelation(buffer: FloatArray, lag: Int): Float {
-        var sum = 0f
-        var normA = 0f
-        var normB = 0f
-
-        for (i in 0 until buffer.size - lag) {
-            sum += buffer[i] * buffer[i + lag]
-            normA += buffer[i] * buffer[i]
-            normB += buffer[i + lag] * buffer[i + lag]
-        }
-
-        val denominator = sqrt(normA * normB)
-        return if (denominator > 0f) sum / denominator else 0f
-    }
-
-    private fun refineLag(buffer: FloatArray, lag: Int, minLag: Int, maxLag: Int): Float {
-        if (lag <= minLag || lag >= maxLag) return lag.toFloat()
-
-        val prev = autocorrelation(buffer, lag - 1)
-        val curr = autocorrelation(buffer, lag)
-        val next = autocorrelation(buffer, lag + 1)
-
-        val denom = 2f * (2f * curr - prev - next)
-        return if (denom > 0f) {
-            lag - (next - prev) / denom
-        } else {
-            lag.toFloat()
-        }
-    }
-
-    private fun autocorrelation(buffer: FloatArray, lag: Int): Float {
-        var sum = 0f
-        for (i in 0 until buffer.size - lag) {
-            sum += buffer[i] * buffer[i + lag]
-        }
-        return sum
     }
 }
