@@ -4,22 +4,27 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fretpitch.data.audio.TonePlayer
 import com.fretpitch.data.mapper.FrequencyMapper
+import com.fretpitch.data.source.local.db.dao.SessionDao
+import com.fretpitch.data.source.local.db.entity.SessionEntity
 import com.fretpitch.domain.model.AppMode
 import com.fretpitch.domain.model.Exercise
 import com.fretpitch.domain.model.GuitarString
 import com.fretpitch.domain.model.Note
 import com.fretpitch.domain.repository.PitchDetector
+import com.fretpitch.domain.repository.UserPreferencesRepository
 import com.fretpitch.domain.usecase.CalculateStatsUseCase
 import com.fretpitch.domain.usecase.ExerciseAttempt
 import com.fretpitch.domain.usecase.GenerateExerciseUseCase
 import com.fretpitch.presentation.model.FeedbackState
 import com.fretpitch.presentation.model.MainUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -31,7 +36,9 @@ class MainViewModel @Inject constructor(
     private val calculateStatsUseCase: CalculateStatsUseCase,
     private val pitchDetector: PitchDetector,
     private val frequencyMapper: FrequencyMapper,
-    private val tonePlayer: TonePlayer
+    private val tonePlayer: TonePlayer,
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val sessionDao: SessionDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -56,26 +63,42 @@ class MainViewModel @Inject constructor(
         private const val DETECTED_NOTE_HOLD_MS = 1500L
     }
 
+    init {
+        viewModelScope.launch {
+            userPreferencesRepository.speedLevel.collectLatest { level ->
+                _uiState.update { it.copy(speedLevel = level) }
+            }
+        }
+        viewModelScope.launch {
+            userPreferencesRepository.appMode.collectLatest { mode ->
+                _uiState.update { it.copy(mode = mode) }
+            }
+        }
+        viewModelScope.launch {
+            userPreferencesRepository.includeSharps.collectLatest { include ->
+                _uiState.update { it.copy(includeSharps = include) }
+            }
+        }
+    }
+
     fun setMode(mode: AppMode) {
         if (_uiState.value.isPlaying) return
-        _uiState.update { it.copy(mode = mode) }
+        viewModelScope.launch { userPreferencesRepository.updateAppMode(mode) }
     }
 
     fun setIncludeSharps(include: Boolean) {
         if (_uiState.value.isPlaying) return
-        _uiState.update { it.copy(includeSharps = include) }
+        viewModelScope.launch { userPreferencesRepository.updateIncludeSharps(include) }
     }
 
     fun increaseSpeed() {
-        _uiState.update {
-            it.copy(speedLevel = (it.speedLevel + 1).coerceAtMost(10))
-        }
+        val nextLevel = (_uiState.value.speedLevel + 1).coerceAtMost(10)
+        viewModelScope.launch { userPreferencesRepository.updateSpeedLevel(nextLevel) }
     }
 
     fun decreaseSpeed() {
-        _uiState.update {
-            it.copy(speedLevel = (it.speedLevel - 1).coerceAtLeast(1))
-        }
+        val nextLevel = (_uiState.value.speedLevel - 1).coerceAtLeast(1)
+        viewModelScope.launch { userPreferencesRepository.updateSpeedLevel(nextLevel) }
     }
 
     fun setMicPermission(granted: Boolean) {
@@ -127,6 +150,25 @@ class MainViewModel @Inject constructor(
                 sessionResult = result,
                 detectedNote = null,
                 detectedString = null
+            )
+        }
+
+        // Persist session to Room
+        viewModelScope.launch(Dispatchers.IO) {
+            val modeInfo = when (val mode = state.mode) {
+                is AppMode.OneNote -> "One Note: ${mode.note.displayName}"
+                is AppMode.OneString -> "One String: ${mode.guitarString.number}"
+                is AppMode.All -> "All Notes/Strings"
+            }
+            
+            sessionDao.insertSession(
+                SessionEntity(
+                    timestamp = System.currentTimeMillis(),
+                    totalCorrect = result.totalCorrect,
+                    totalIncorrect = result.totalIncorrect,
+                    durationMs = timeElapsed,
+                    modeInfo = modeInfo
+                )
             )
         }
     }
