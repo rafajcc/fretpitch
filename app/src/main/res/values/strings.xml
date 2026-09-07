@@ -59,7 +59,7 @@
     <string name="feedback_incorrect">Incorrecto</string>
 
     <!-- Version -->
-    <string name="version_label">Versión 3.7.0 - por rafajcc &amp; Vera Technology</string>
+    <string name="version_label">v%s - por rafajcc &amp; Vera Technology</string>
 
     <!-- Detected note -->
     <string name="detected_note_label">Nota detectada</string>

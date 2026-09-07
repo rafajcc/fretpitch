@@ -14,7 +14,7 @@ import kotlin.math.sin
 
 @Singleton
 class TonePlayer @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     companion object {
         private const val SAMPLE_RATE = 44100

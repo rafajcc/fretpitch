@@ -43,7 +43,7 @@ class TunerViewModel @Inject constructor(
         private const val GUITAR_MIN_FREQUENCY = 75f
         private const val GUITAR_MAX_FREQUENCY = 1100f
         private const val MIN_AMPLITUDE = 0.008f
-        private const val MIN_CONFIDENCE = 0.2f
+        private const val PLAYED_NOTE_CONFIDENCE = 0.15f
         private const val SILENCE_HOLD_MS = 2500L
         private const val TUNED_HOLD_MS = 3500L
     }
@@ -59,7 +59,7 @@ class TunerViewModel @Inject constructor(
             pitchDetector.pitchResults().collect { result ->
                 if (result.frequency < GUITAR_MIN_FREQUENCY ||
                     result.frequency > GUITAR_MAX_FREQUENCY ||
-                    result.confidence < MIN_CONFIDENCE ||
+                    result.confidence > PLAYED_NOTE_CONFIDENCE ||
                     result.amplitude < MIN_AMPLITUDE
                 ) {
                     return@collect
