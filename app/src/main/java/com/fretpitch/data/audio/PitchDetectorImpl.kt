@@ -80,32 +80,35 @@ class PitchDetectorImpl @Inject constructor(
         val minLag = (AudioCapture.SAMPLE_RATE / MAX_FREQUENCY).toInt().coerceAtLeast(1)
         val maxLag = (AudioCapture.SAMPLE_RATE / MIN_FREQUENCY).toInt().coerceAtMost(windowed.size - 1)
 
+        // Pass 1: find the lag with the maximum normalized correlation.
         var bestLag = -1
         var bestValue = 0f
 
         for (lag in minLag..maxLag) {
-            var sum = 0f
-            var normA = 0f
-            var normB = 0f
-
-            for (i in 0 until windowed.size - lag) {
-                sum += windowed[i] * windowed[i + lag]
-                normA += windowed[i] * windowed[i]
-                normB += windowed[i + lag] * windowed[i + lag]
-            }
-
-            val denominator = sqrt(normA * normB)
-            val normalized = if (denominator > 0f) sum / denominator else 0f
-
-            if (normalized > bestValue && normalized > CONFIDENCE_THRESHOLD) {
+            val normalized = normalizedAutocorrelation(windowed, lag)
+            if (normalized > bestValue) {
                 bestValue = normalized
                 bestLag = lag
             }
         }
 
-        if (bestLag <= 0) return null
+        if (bestLag <= 0 || bestValue < CONFIDENCE_THRESHOLD) return null
 
-        val refinedLag = refineLag(windowed, bestLag, minLag, maxLag)
+        // Pass 2: harmonic rejection. A guitar note repeats not only at its true
+        // fundamental period but also at integer multiples of it. The 2nd/3rd harmonic
+        // often produces a slightly cleaner correlation peak, pulling the detector to
+        // half/third the period (an octave or more too high). To recover the true
+        // fundamental, pick the LARGEST lag whose correlation is still near the maximum.
+        val acceptRatio = 0.9f
+        var fundamentalLag = bestLag
+        for (lag in bestLag + 1..maxLag) {
+            val v = normalizedAutocorrelation(windowed, lag)
+            if (v >= bestValue * acceptRatio) {
+                fundamentalLag = lag
+            }
+        }
+
+        val refinedLag = refineLag(windowed, fundamentalLag, minLag, maxLag)
         val frequency = AudioCapture.SAMPLE_RATE / refinedLag
 
         if (frequency < MIN_FREQUENCY || frequency > MAX_FREQUENCY) return null
@@ -115,6 +118,21 @@ class PitchDetectorImpl @Inject constructor(
             confidence = bestValue,
             amplitude = rms
         )
+    }
+
+    private fun normalizedAutocorrelation(buffer: FloatArray, lag: Int): Float {
+        var sum = 0f
+        var normA = 0f
+        var normB = 0f
+
+        for (i in 0 until buffer.size - lag) {
+            sum += buffer[i] * buffer[i + lag]
+            normA += buffer[i] * buffer[i]
+            normB += buffer[i + lag] * buffer[i + lag]
+        }
+
+        val denominator = sqrt(normA * normB)
+        return if (denominator > 0f) sum / denominator else 0f
     }
 
     private fun refineLag(buffer: FloatArray, lag: Int, minLag: Int, maxLag: Int): Float {

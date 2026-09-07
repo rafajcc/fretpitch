@@ -9,7 +9,12 @@ import kotlin.math.pow
 
 class GenerateExerciseUseCase @Inject constructor() {
 
-    operator fun invoke(mode: AppMode, includeSharps: Boolean): Exercise {
+    operator fun invoke(
+        mode: AppMode,
+        includeSharps: Boolean,
+        excludeNote: Note? = null,
+        excludeString: GuitarString? = null
+    ): Exercise {
         val notes = if (includeSharps) Note.allNotes() else Note.naturalNotes()
         val strings = GuitarString.all()
 
@@ -27,11 +32,21 @@ class GenerateExerciseUseCase @Inject constructor() {
             }
         }
 
-        require(validCombinations.isNotEmpty()) {
+        val filtered = if (excludeNote != null && excludeString != null) {
+            validCombinations.filter {
+                !(it.note == excludeNote && it.guitarString == excludeString)
+            }
+        } else {
+            validCombinations
+        }
+
+        val pool = filtered.ifEmpty { validCombinations }
+
+        require(pool.isNotEmpty()) {
             "No valid exercises found for the given mode and options"
         }
 
-        return validCombinations.random()
+        return pool.random()
     }
 
     private fun createExerciseIfValid(note: Note, guitarString: GuitarString): Exercise? {

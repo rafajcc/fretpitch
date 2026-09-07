@@ -7,6 +7,7 @@ import com.fretpitch.data.mapper.FrequencyMapper
 import com.fretpitch.domain.model.AppMode
 import com.fretpitch.domain.model.Exercise
 import com.fretpitch.domain.model.GuitarString
+import com.fretpitch.domain.model.Note
 import com.fretpitch.domain.repository.PitchDetector
 import com.fretpitch.domain.usecase.CalculateStatsUseCase
 import com.fretpitch.domain.usecase.ExerciseAttempt
@@ -38,17 +39,21 @@ class MainViewModel @Inject constructor(
 
     private var exerciseJob: Job? = null
     private var pitchCollectionJob: Job? = null
+    private var silenceTimerJob: Job? = null
 
-    private var wrongNoteRepeats = 0
+    private var wrongNoteStartMs: Long = 0L
     private var lastWrongMidi: Int? = null
+    private var lastExerciseNote: Note? = null
+    private var lastExerciseString: GuitarString? = null
 
     companion object {
-        private const val MIN_AMPLITUDE = 0.02f
-        private const val PLAYED_NOTE_AMPLITUDE = 0.03f
-        private const val PLAYED_NOTE_CONFIDENCE = 0.5f
-        private const val WRONG_NOTE_REPEATS = 2
+        private const val MIN_AMPLITUDE = 0.008f
+        private const val PLAYED_NOTE_AMPLITUDE = 0.015f
+        private const val PLAYED_NOTE_CONFIDENCE = 0.3f
+        private const val WRONG_NOTE_SUSTAIN_MS = 250L
         private const val POLL_INTERVAL_MS = 50L
         private const val FEEDBACK_DISPLAY_MS = 500L
+        private const val DETECTED_NOTE_HOLD_MS = 1500L
     }
 
     fun setMode(mode: AppMode) {
@@ -81,6 +86,11 @@ class MainViewModel @Inject constructor(
         if (_uiState.value.isPlaying) return
         if (!_uiState.value.hasMicPermission) return
 
+        lastExerciseNote = null
+        lastExerciseString = null
+        wrongNoteStartMs = 0L
+        lastWrongMidi = null
+
         _uiState.update {
             it.copy(
                 isPlaying = true,
@@ -100,6 +110,7 @@ class MainViewModel @Inject constructor(
     fun stop() {
         exerciseJob?.cancel()
         pitchCollectionJob?.cancel()
+        silenceTimerJob?.cancel()
 
         pitchDetector.stop()
 
@@ -129,8 +140,13 @@ class MainViewModel @Inject constructor(
             while (isActive) {
                 val exercise = generateExerciseUseCase(
                     _uiState.value.mode,
-                    _uiState.value.includeSharps
+                    _uiState.value.includeSharps,
+                    lastExerciseNote,
+                    lastExerciseString
                 )
+
+                lastExerciseNote = exercise.note
+                lastExerciseString = exercise.guitarString
 
                 _uiState.update {
                     it.copy(
@@ -170,13 +186,14 @@ class MainViewModel @Inject constructor(
                         detectedString = detectedGuitarString
                     )
                 }
+                resetDetectedNoteTimer()
 
                 if (_uiState.value.feedback != FeedbackState.Listening) return@collect
 
                 val exercise = _uiState.value.currentExercise ?: return@collect
 
                 if (frequencyMapper.isNoteCorrect(result.frequency, exercise.expectedFrequency)) {
-                    wrongNoteRepeats = 0
+                    wrongNoteStartMs = 0L
                     lastWrongMidi = null
                     handleResult(true)
                     return@collect
@@ -188,21 +205,35 @@ class MainViewModel @Inject constructor(
                 if (result.amplitude >= PLAYED_NOTE_AMPLITUDE &&
                     result.confidence >= PLAYED_NOTE_CONFIDENCE
                 ) {
-                    if (wrongMidi == lastWrongMidi) {
-                        wrongNoteRepeats++
+                    val now = System.currentTimeMillis()
+                    if (wrongMidi == lastWrongMidi && wrongNoteStartMs > 0L) {
+                        if (now - wrongNoteStartMs >= WRONG_NOTE_SUSTAIN_MS) {
+                            wrongNoteStartMs = 0L
+                            lastWrongMidi = null
+                            handleResult(false)
+                        }
                     } else {
-                        wrongNoteRepeats = 1
+                        wrongNoteStartMs = now
                         lastWrongMidi = wrongMidi
                     }
-
-                    if (wrongNoteRepeats >= WRONG_NOTE_REPEATS) {
-                        wrongNoteRepeats = 0
-                        lastWrongMidi = null
-                        handleResult(false)
-                    }
                 } else {
-                    wrongNoteRepeats = 0
+                    wrongNoteStartMs = 0L
                     lastWrongMidi = wrongMidi
+                }
+            }
+        }
+    }
+
+    private fun resetDetectedNoteTimer() {
+        silenceTimerJob?.cancel()
+        silenceTimerJob = viewModelScope.launch {
+            delay(DETECTED_NOTE_HOLD_MS)
+            if (isActive) {
+                _uiState.update {
+                    it.copy(
+                        detectedNote = null,
+                        detectedString = null
+                    )
                 }
             }
         }
