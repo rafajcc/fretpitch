@@ -44,8 +44,8 @@ class TunerViewModel @Inject constructor(
         private const val GUITAR_MAX_FREQUENCY = 1100f
         private const val MIN_AMPLITUDE = 0.008f
         private const val MIN_CONFIDENCE = 0.2f
-        private const val SILENCE_TIMEOUT_MS = 350L
-        private const val TUNED_HOLD_MS = 2500L
+        private const val SILENCE_HOLD_MS = 2500L
+        private const val TUNED_HOLD_MS = 3500L
     }
 
     fun startListening() {
@@ -99,7 +99,7 @@ class TunerViewModel @Inject constructor(
                     viewModelScope.launch { tonePlayer.playStringTuned() }
                 }
 
-                resetSilenceTimer(if (matchedString != null && inTune) TUNED_HOLD_MS else SILENCE_TIMEOUT_MS)
+                resetSilenceTimer(if (matchedString != null && inTune) TUNED_HOLD_MS else SILENCE_HOLD_MS)
             }
         }
     }
