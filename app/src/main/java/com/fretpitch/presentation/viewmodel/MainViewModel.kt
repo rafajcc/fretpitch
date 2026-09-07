@@ -54,9 +54,9 @@ class MainViewModel @Inject constructor(
     private var lastExerciseString: GuitarString? = null
 
     companion object {
-        private const val MIN_AMPLITUDE = 0.008f
-        private const val PLAYED_NOTE_AMPLITUDE = 0.015f
-        private const val PLAYED_NOTE_CONFIDENCE = 0.15f
+        private const val MIN_AMPLITUDE = 0.003f
+        private const val PLAYED_NOTE_AMPLITUDE = 0.005f
+        private const val PLAYED_NOTE_CONFIDENCE = 0.18f
         private const val WRONG_NOTE_SUSTAIN_MS = 250L
         private const val POLL_INTERVAL_MS = 50L
         private const val FEEDBACK_DISPLAY_MS = 500L
