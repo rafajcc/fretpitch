@@ -83,21 +83,25 @@ class MainViewModel @Inject constructor(
 
     fun setMode(mode: AppMode) {
         if (_uiState.value.isPlaying) return
+        _uiState.update { it.copy(mode = mode) }
         viewModelScope.launch { userPreferencesRepository.updateAppMode(mode) }
     }
 
     fun setIncludeSharps(include: Boolean) {
         if (_uiState.value.isPlaying) return
+        _uiState.update { it.copy(includeSharps = include) }
         viewModelScope.launch { userPreferencesRepository.updateIncludeSharps(include) }
     }
 
     fun increaseSpeed() {
         val nextLevel = (_uiState.value.speedLevel + 1).coerceAtMost(10)
+        _uiState.update { it.copy(speedLevel = nextLevel) }
         viewModelScope.launch { userPreferencesRepository.updateSpeedLevel(nextLevel) }
     }
 
     fun decreaseSpeed() {
         val nextLevel = (_uiState.value.speedLevel - 1).coerceAtLeast(1)
+        _uiState.update { it.copy(speedLevel = nextLevel) }
         viewModelScope.launch { userPreferencesRepository.updateSpeedLevel(nextLevel) }
     }
 

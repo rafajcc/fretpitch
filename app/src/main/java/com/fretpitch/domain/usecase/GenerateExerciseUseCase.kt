@@ -9,6 +9,11 @@ import kotlin.math.pow
 
 class GenerateExerciseUseCase @Inject constructor() {
 
+    companion object {
+        // Physical limit for this practice app: First position + Octave
+        private const val MAX_FRET = 12
+    }
+
     operator fun invoke(
         mode: AppMode,
         includeSharps: Boolean,
@@ -50,8 +55,15 @@ class GenerateExerciseUseCase @Inject constructor() {
     }
 
     private fun createExerciseIfValid(note: Note, guitarString: GuitarString): Exercise? {
-        val fret = (note.semitone - guitarString.openNoteMidi % 12 + 12) % 12
-        if (fret > 12) return null
+        val openNoteSemitone = guitarString.openNoteMidi % 12
+        val targetSemitone = note.semitone
+        
+        // Calculate the lowest fret for this note (0-11)
+        val fret = (targetSemitone - openNoteSemitone + 12) % 12
+        
+        // We keep it predictable (first position 0-11). 
+        // Validation remains for physical sanity check.
+        if (fret > MAX_FRET) return null
 
         val targetMidi = guitarString.openNoteMidi + fret
         val expectedFrequency = midiToFrequency(targetMidi)

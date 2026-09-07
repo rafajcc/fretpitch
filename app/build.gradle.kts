@@ -14,8 +14,8 @@ android {
         applicationId = "com.fretpitch"
         minSdk = 33
         targetSdk = 35
-        versionCode = 13
-        versionName = "3.6.0"
+        versionCode = 14
+        versionName = "3.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -39,10 +39,10 @@ android {
     buildFeatures {
         compose = true
     }
+}
 
-    room {
-        schemaDirectory("$projectDir/schemas")
-    }
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 androidComponents {
@@ -87,6 +87,9 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.junit)
 
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.junit)

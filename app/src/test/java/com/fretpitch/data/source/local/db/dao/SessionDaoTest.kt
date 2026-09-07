@@ -3,7 +3,6 @@ package com.fretpitch.data.source.local.db.dao
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.fretpitch.data.source.local.db.AppDatabase
 import com.fretpitch.data.source.local.db.entity.SessionEntity
 import kotlinx.coroutines.flow.first
@@ -13,8 +12,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
 class SessionDaoTest {
 
     private lateinit var database: AppDatabase
@@ -23,7 +23,9 @@ class SessionDaoTest {
     @Before
     fun createDb() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
+        database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+            .allowMainThreadQueries()
+            .build()
         dao = database.sessionDao()
     }
 
@@ -43,8 +45,8 @@ class SessionDaoTest {
         )
         dao.insertSession(session)
         val allSessions = dao.getAllSessions().first()
-        assertEquals(allSessions.size, 1)
-        assertEquals(allSessions[0].totalCorrect, 10)
-        assertEquals(allSessions[0].modeInfo, "All")
+        assertEquals(1, allSessions.size)
+        assertEquals(10, allSessions[0].totalCorrect)
+        assertEquals("All", allSessions[0].modeInfo)
     }
 }
