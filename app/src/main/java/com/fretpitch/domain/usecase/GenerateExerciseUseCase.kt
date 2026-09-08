@@ -20,21 +20,17 @@ class GenerateExerciseUseCase @Inject constructor() {
         excludeNote: Note? = null,
         excludeString: GuitarString? = null
     ): Exercise {
-        val notes = if (includeSharps) Note.allNotes() else Note.naturalNotes()
-        val strings = GuitarString.all()
+        // Filter selection by sharps preference if necessary
+        val notesPool = if (includeSharps) {
+            mode.selectedNotes
+        } else {
+            mode.selectedNotes.filter { !it.isSharp }
+        }
+        
+        val stringsPool = mode.selectedStrings
 
-        val validCombinations = when (mode) {
-            is AppMode.OneNote -> {
-                strings.mapNotNull { string -> createExerciseIfValid(mode.note, string) }
-            }
-            is AppMode.OneString -> {
-                notes.mapNotNull { note -> createExerciseIfValid(note, mode.guitarString) }
-            }
-            is AppMode.All -> {
-                notes.flatMap { note ->
-                    strings.mapNotNull { string -> createExerciseIfValid(note, string) }
-                }
-            }
+        val validCombinations = notesPool.flatMap { note ->
+            stringsPool.mapNotNull { string -> createExerciseIfValid(note, string) }
         }
 
         val filtered = if (excludeNote != null && excludeString != null) {
@@ -48,7 +44,7 @@ class GenerateExerciseUseCase @Inject constructor() {
         val pool = filtered.ifEmpty { validCombinations }
 
         require(pool.isNotEmpty()) {
-            "No valid exercises found for the given mode and options"
+            "No valid exercises found for the given selection and options"
         }
 
         return pool.random()

@@ -11,6 +11,8 @@ import org.junit.Test
 class GenerateExerciseUseCaseTest {
 
     private lateinit var useCase: GenerateExerciseUseCase
+    private val allNotes = Note.allNotes().toSet()
+    private val allStrings = GuitarString.all().toSet()
 
     @Before
     fun setup() {
@@ -19,21 +21,24 @@ class GenerateExerciseUseCaseTest {
 
     @Test
     fun `generate exercise respects includeSharps false`() {
-        val exercise = useCase(AppMode.All, includeSharps = false)
+        val mode = AppMode(allNotes, allStrings)
+        val exercise = useCase(mode, includeSharps = false)
         assertTrue("Note should not be sharp", !exercise.note.isSharp)
     }
 
     @Test
-    fun `generate exercise respects OneString mode`() {
+    fun `generate exercise respects selected strings`() {
         val targetString = GuitarString.STRING_3
-        val exercise = useCase(AppMode.OneString(targetString), includeSharps = true)
+        val mode = AppMode(allNotes, setOf(targetString))
+        val exercise = useCase(mode, includeSharps = true)
         assertTrue("String should be 3", exercise.guitarString == targetString)
     }
 
     @Test
-    fun `generate exercise respects OneNote mode`() {
+    fun `generate exercise respects selected notes`() {
         val targetNote = Note.C
-        val exercise = useCase(AppMode.OneNote(targetNote), includeSharps = true)
+        val mode = AppMode(setOf(targetNote), allStrings)
+        val exercise = useCase(mode, includeSharps = true)
         assertTrue("Note should be C", exercise.note == targetNote)
     }
 
@@ -41,10 +46,11 @@ class GenerateExerciseUseCaseTest {
     fun `generate exercise respects exclusion filter`() {
         val lastNote = Note.E
         val lastString = GuitarString.STRING_1
+        val mode = AppMode(allNotes, allStrings)
         
         repeat(50) {
             val exercise = useCase(
-                AppMode.All, 
+                mode, 
                 includeSharps = true,
                 excludeNote = lastNote,
                 excludeString = lastString
@@ -56,36 +62,13 @@ class GenerateExerciseUseCaseTest {
 
     @Test
     fun `all possible exercises are within 0 to 12 frets range`() {
-        val notes = Note.allNotes()
-        val strings = GuitarString.all()
+        val mode = AppMode(allNotes, allStrings)
         
-        // This test checks the internal logic by running the use case for all combinations
-        strings.forEach { string ->
-            notes.forEach { note ->
-                // Accessing the private method via reflection or just testing All mode output
-                val exercise = useCase(AppMode.OneNote(note), includeSharps = true)
-                // In our model, fret is derived from frequency
-                // expectedFrequency = 440 * 2^((midi-69)/12)
-                // We verify that the midi calculated internally is within range
-                // The useCase doesn't expose fret, but it uses it to calculate frequency
-                // If the frequency corresponds to a midi note within [open, open+12], it's valid.
-                
-                val openMidi = string.openNoteMidi
-                val maxMidi = openMidi + 12
-                
-                // Frequency to Midi (approximate)
-                val midi = (12 * Math.log((exercise.expectedFrequency / 440.0).toDouble()) / Math.log(2.0) + 69).toInt()
-                
-                // For a specific OneNote mode, it will pick one of the available strings.
-                // We want to verify that for ANY exercise generated, it's valid.
-            }
-        }
-        
-        // Let's do a more direct test for all combinations
         repeat(200) {
-            val exercise = useCase(AppMode.All, includeSharps = true)
+            val exercise = useCase(mode, includeSharps = true)
             val openMidi = exercise.guitarString.openNoteMidi
             val freq = exercise.expectedFrequency
+            // Simplified reverse mapping to verify fret
             val midi = Math.round(12 * Math.log((freq / 440.0).toDouble()) / Math.log(2.0) + 69).toInt()
             val fret = midi - openMidi
             

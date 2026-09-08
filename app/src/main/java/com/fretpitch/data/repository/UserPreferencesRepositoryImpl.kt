@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.fretpitch.domain.model.AppMode
 import com.fretpitch.domain.model.GuitarString
 import com.fretpitch.domain.model.Note
@@ -22,9 +22,8 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     private object PreferencesKeys {
         val SPEED_LEVEL = intPreferencesKey("speed_level")
-        val MODE_TYPE = stringPreferencesKey("mode_type")
-        val MODE_NOTE = stringPreferencesKey("mode_note")
-        val MODE_STRING = intPreferencesKey("mode_string")
+        val SELECTED_NOTES = stringSetPreferencesKey("selected_notes")
+        val SELECTED_STRINGS = stringSetPreferencesKey("selected_strings")
         val INCLUDE_SHARPS = booleanPreferencesKey("include_sharps")
     }
 
@@ -33,20 +32,26 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     }
 
     override val appMode: Flow<AppMode> = dataStore.data.map { preferences ->
-        val type = preferences[PreferencesKeys.MODE_TYPE] ?: "All"
-        when (type) {
-            "OneNote" -> {
-                val noteName = preferences[PreferencesKeys.MODE_NOTE] ?: Note.E.name
-                val note = try { Note.valueOf(noteName) } catch (e: Exception) { Note.E }
-                AppMode.OneNote(note)
-            }
-            "OneString" -> {
-                val stringNum = preferences[PreferencesKeys.MODE_STRING] ?: 1
-                val guitarString = GuitarString.fromNumber(stringNum) ?: GuitarString.STRING_1
-                AppMode.OneString(guitarString)
-            }
-            else -> AppMode.All
+        val notesSet = preferences[PreferencesKeys.SELECTED_NOTES]
+        val stringsSet = preferences[PreferencesKeys.SELECTED_STRINGS]
+
+        val selectedNotes = if (notesSet == null) {
+            Note.allNotes().toSet()
+        } else {
+            notesSet.mapNotNull { name ->
+                try { Note.valueOf(name) } catch (e: Exception) { null }
+            }.toSet().ifEmpty { Note.allNotes().toSet() }
         }
+
+        val selectedStrings = if (stringsSet == null) {
+            GuitarString.all().toSet()
+        } else {
+            stringsSet.mapNotNull { num ->
+                GuitarString.fromNumber(num.toIntOrNull() ?: -1)
+            }.toSet().ifEmpty { GuitarString.all().toSet() }
+        }
+
+        AppMode(selectedNotes, selectedStrings)
     }
 
     override val includeSharps: Flow<Boolean> = dataStore.data.map { preferences ->
@@ -61,19 +66,8 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun updateAppMode(mode: AppMode) {
         dataStore.edit { preferences ->
-            when (mode) {
-                is AppMode.OneNote -> {
-                    preferences[PreferencesKeys.MODE_TYPE] = "OneNote"
-                    preferences[PreferencesKeys.MODE_NOTE] = mode.note.name
-                }
-                is AppMode.OneString -> {
-                    preferences[PreferencesKeys.MODE_TYPE] = "OneString"
-                    preferences[PreferencesKeys.MODE_STRING] = mode.guitarString.number
-                }
-                is AppMode.All -> {
-                    preferences[PreferencesKeys.MODE_TYPE] = "All"
-                }
-            }
+            preferences[PreferencesKeys.SELECTED_NOTES] = mode.selectedNotes.map { it.name }.toSet()
+            preferences[PreferencesKeys.SELECTED_STRINGS] = mode.selectedStrings.map { it.number.toString() }.toSet()
         }
     }
 

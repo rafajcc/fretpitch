@@ -101,7 +101,7 @@ fun MainScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_launcher_foreground),
+                            painter = painterResource(R.drawable.ic_logo),
                             contentDescription = null,
                             modifier = Modifier.size(32.dp),
                             tint = MaterialTheme.colorScheme.primary
@@ -172,7 +172,10 @@ fun MainScreen(
 
                 PracticeSection(
                     uiState = uiState,
-                    onModeChange = viewModel::setMode,
+                    onNoteToggle = viewModel::toggleNote,
+                    onStringToggle = viewModel::toggleString,
+                    onSelectAllNotes = viewModel::selectAllNotes,
+                    onSelectAllStrings = viewModel::selectAllStrings,
                     onSharpsToggle = viewModel::setIncludeSharps,
                     onSpeedUp = viewModel::increaseSpeed,
                     onSpeedDown = viewModel::decreaseSpeed,
@@ -203,7 +206,10 @@ fun MainScreen(
 @Composable
 private fun PracticeSection(
     uiState: MainUiState,
-    onModeChange: (com.fretpitch.domain.model.AppMode) -> Unit,
+    onNoteToggle: (com.fretpitch.domain.model.Note) -> Unit,
+    onStringToggle: (com.fretpitch.domain.model.GuitarString) -> Unit,
+    onSelectAllNotes: () -> Unit,
+    onSelectAllStrings: () -> Unit,
     onSharpsToggle: (Boolean) -> Unit,
     onSpeedUp: () -> Unit,
     onSpeedDown: () -> Unit,
@@ -212,9 +218,13 @@ private fun PracticeSection(
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         if (!uiState.isPlaying) {
             ModeSelector(
-                currentMode = uiState.mode,
+                selectedNotes = uiState.mode.selectedNotes,
+                selectedStrings = uiState.mode.selectedStrings,
                 includeSharps = uiState.includeSharps,
-                onModeChange = onModeChange,
+                onNoteToggle = onNoteToggle,
+                onStringToggle = onStringToggle,
+                onSelectAllNotes = onSelectAllNotes,
+                onSelectAllStrings = onSelectAllStrings,
                 onSharpsToggle = onSharpsToggle,
                 modifier = Modifier.fillMaxWidth()
             )

@@ -8,7 +8,7 @@ import com.fretpitch.domain.model.SessionResult
 import com.fretpitch.domain.usecase.ExerciseAttempt
 
 data class MainUiState(
-    val mode: AppMode = AppMode.All,
+    val mode: AppMode = AppMode(),
     val includeSharps: Boolean = true,
     val speedLevel: Int = 6,
     val isPlaying: Boolean = false,

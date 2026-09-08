@@ -81,10 +81,46 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun setMode(mode: AppMode) {
+    fun toggleNote(note: Note) {
         if (_uiState.value.isPlaying) return
-        _uiState.update { it.copy(mode = mode) }
-        viewModelScope.launch { userPreferencesRepository.updateAppMode(mode) }
+        val currentNotes = _uiState.value.mode.selectedNotes
+        val newNotes = if (currentNotes.contains(note)) {
+            // Guard: at least one note
+            if (currentNotes.size > 1) currentNotes - note else currentNotes
+        } else {
+            currentNotes + note
+        }
+        val newMode = _uiState.value.mode.copy(selectedNotes = newNotes)
+        _uiState.update { it.copy(mode = newMode) }
+        viewModelScope.launch { userPreferencesRepository.updateAppMode(newMode) }
+    }
+
+    fun toggleString(guitarString: GuitarString) {
+        if (_uiState.value.isPlaying) return
+        val currentStrings = _uiState.value.mode.selectedStrings
+        val newStrings = if (currentStrings.contains(guitarString)) {
+            // Guard: at least one string
+            if (currentStrings.size > 1) currentStrings - guitarString else currentStrings
+        } else {
+            currentStrings + guitarString
+        }
+        val newMode = _uiState.value.mode.copy(selectedStrings = newStrings)
+        _uiState.update { it.copy(mode = newMode) }
+        viewModelScope.launch { userPreferencesRepository.updateAppMode(newMode) }
+    }
+    
+    fun selectAllNotes() {
+        if (_uiState.value.isPlaying) return
+        val newMode = _uiState.value.mode.copy(selectedNotes = Note.allNotes().toSet())
+        _uiState.update { it.copy(mode = newMode) }
+        viewModelScope.launch { userPreferencesRepository.updateAppMode(newMode) }
+    }
+    
+    fun selectAllStrings() {
+        if (_uiState.value.isPlaying) return
+        val newMode = _uiState.value.mode.copy(selectedStrings = GuitarString.all().toSet())
+        _uiState.update { it.copy(mode = newMode) }
+        viewModelScope.launch { userPreferencesRepository.updateAppMode(newMode) }
     }
 
     fun setIncludeSharps(include: Boolean) {
@@ -159,11 +195,15 @@ class MainViewModel @Inject constructor(
 
         // Persist session to Room
         viewModelScope.launch(Dispatchers.IO) {
-            val modeInfo = when (val mode = state.mode) {
-                is AppMode.OneNote -> "One Note: ${mode.note.displayName}"
-                is AppMode.OneString -> "One String: ${mode.guitarString.number}"
-                is AppMode.All -> "All Notes/Strings"
-            }
+            val mode = state.mode
+            val notesCount = mode.selectedNotes.size
+            val stringsCount = mode.selectedStrings.size
+            val totalNotes = Note.allNotes().size
+            val totalStrings = GuitarString.all().size
+            
+            val notesDesc = if (notesCount == totalNotes) "All Notes" else "$notesCount Notes"
+            val stringsDesc = if (stringsCount == totalStrings) "All Strings" else "Strings: ${mode.selectedStrings.sortedBy { it.number }.joinToString { it.number.toString() }}"
+            val modeInfo = "$notesDesc / $stringsDesc"
             
             sessionDao.insertSession(
                 SessionEntity(

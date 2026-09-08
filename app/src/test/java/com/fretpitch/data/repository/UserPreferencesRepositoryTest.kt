@@ -3,13 +3,9 @@ package com.fretpitch.data.repository
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStoreFile
 import com.fretpitch.domain.model.AppMode
 import com.fretpitch.domain.model.GuitarString
 import com.fretpitch.domain.model.Note
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -61,29 +57,23 @@ class UserPreferencesRepositoryTest {
     }
 
     @Test
-    fun `default app mode is All`() = runTest(testScope.testScheduler) {
+    fun `default app mode contains all notes and strings`() = runTest(testScope.testScheduler) {
         val mode = repository.appMode.first()
-        assertEquals(AppMode.All, mode)
+        assertEquals(Note.allNotes().toSet(), mode.selectedNotes)
+        assertEquals(GuitarString.all().toSet(), mode.selectedStrings)
     }
 
     @Test
-    fun `update app mode OneNote persists correctly`() = runTest(testScope.testScheduler) {
-        val targetNote = Note.A_SHARP
-        repository.updateAppMode(AppMode.OneNote(targetNote))
+    fun `update app mode persists selection correctly`() = runTest(testScope.testScheduler) {
+        val targetNotes = setOf(Note.C, Note.G, Note.E)
+        val targetStrings = setOf(GuitarString.STRING_5, GuitarString.STRING_6)
+        val targetMode = AppMode(targetNotes, targetStrings)
+        
+        repository.updateAppMode(targetMode)
         val mode = repository.appMode.first()
         
-        assert(mode is AppMode.OneNote)
-        assertEquals(targetNote, (mode as AppMode.OneNote).note)
-    }
-
-    @Test
-    fun `update app mode OneString persists correctly`() = runTest(testScope.testScheduler) {
-        val targetString = GuitarString.STRING_4
-        repository.updateAppMode(AppMode.OneString(targetString))
-        val mode = repository.appMode.first()
-        
-        assert(mode is AppMode.OneString)
-        assertEquals(targetString, (mode as AppMode.OneString).guitarString)
+        assertEquals(targetNotes, mode.selectedNotes)
+        assertEquals(targetStrings, mode.selectedStrings)
     }
 
     @Test
