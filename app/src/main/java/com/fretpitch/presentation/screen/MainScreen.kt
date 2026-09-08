@@ -23,11 +23,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -48,6 +50,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fretpitch.R
 import com.fretpitch.presentation.component.FeedbackOverlay
 import com.fretpitch.presentation.component.ModeSelector
+import com.fretpitch.presentation.component.ModeSelectorSheetContent
 import com.fretpitch.presentation.component.NoteDisplay
 import com.fretpitch.presentation.component.PermissionHandler
 import com.fretpitch.presentation.component.SpeedControl
@@ -65,6 +68,8 @@ fun MainScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showLanguageMenu by remember { mutableStateOf(false) }
+    var showModeSelector by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -172,11 +177,7 @@ fun MainScreen(
 
                 PracticeSection(
                     uiState = uiState,
-                    onNoteToggle = viewModel::toggleNote,
-                    onStringToggle = viewModel::toggleString,
-                    onSelectAllNotes = viewModel::selectAllNotes,
-                    onSelectAllStrings = viewModel::selectAllStrings,
-                    onSharpsToggle = viewModel::setIncludeSharps,
+                    onModeClick = { showModeSelector = true },
                     onSpeedUp = viewModel::increaseSpeed,
                     onSpeedDown = viewModel::decreaseSpeed,
                     onPlayStop = {
@@ -199,6 +200,24 @@ fun MainScreen(
                 feedback = uiState.feedback,
                 modifier = Modifier.padding(top = 16.dp)
             )
+
+            if (showModeSelector) {
+                ModalBottomSheet(
+                    onDismissRequest = { showModeSelector = false },
+                    sheetState = sheetState
+                ) {
+                    ModeSelectorSheetContent(
+                        selectedNotes = uiState.mode.selectedNotes,
+                        selectedStrings = uiState.mode.selectedStrings,
+                        includeSharps = uiState.includeSharps,
+                        onNoteToggle = viewModel::toggleNote,
+                        onStringToggle = viewModel::toggleString,
+                        onSelectAllNotes = viewModel::selectAllNotes,
+                        onSelectAllStrings = viewModel::selectAllStrings,
+                        onSharpsToggle = viewModel::setIncludeSharps
+                    )
+                }
+            }
         }
     }
 }
@@ -206,11 +225,7 @@ fun MainScreen(
 @Composable
 private fun PracticeSection(
     uiState: MainUiState,
-    onNoteToggle: (com.fretpitch.domain.model.Note) -> Unit,
-    onStringToggle: (com.fretpitch.domain.model.GuitarString) -> Unit,
-    onSelectAllNotes: () -> Unit,
-    onSelectAllStrings: () -> Unit,
-    onSharpsToggle: (Boolean) -> Unit,
+    onModeClick: () -> Unit,
     onSpeedUp: () -> Unit,
     onSpeedDown: () -> Unit,
     onPlayStop: () -> Unit
@@ -220,12 +235,7 @@ private fun PracticeSection(
             ModeSelector(
                 selectedNotes = uiState.mode.selectedNotes,
                 selectedStrings = uiState.mode.selectedStrings,
-                includeSharps = uiState.includeSharps,
-                onNoteToggle = onNoteToggle,
-                onStringToggle = onStringToggle,
-                onSelectAllNotes = onSelectAllNotes,
-                onSelectAllStrings = onSelectAllStrings,
-                onSharpsToggle = onSharpsToggle,
+                onClick = onModeClick,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(32.dp))

@@ -9,29 +9,77 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.fretpitch.R
 import com.fretpitch.domain.model.GuitarString
 import com.fretpitch.domain.model.Note
 import com.fretpitch.presentation.util.nameResId
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModeSelector(
+    selectedNotes: Set<Note>,
+    selectedStrings: Set<GuitarString>,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedCard(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.setup_practice),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(
+                        R.string.selection_summary,
+                        selectedStrings.size,
+                        selectedNotes.size
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun ModeSelectorSheetContent(
     selectedNotes: Set<Note>,
     selectedStrings: Set<GuitarString>,
     includeSharps: Boolean,
@@ -39,10 +87,14 @@ fun ModeSelector(
     onStringToggle: (GuitarString) -> Unit,
     onSelectAllNotes: () -> Unit,
     onSelectAllStrings: () -> Unit,
-    onSharpsToggle: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    onSharpsToggle: (Boolean) -> Unit
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 48.dp)
+    ) {
         // Strings Selection
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -51,27 +103,21 @@ fun ModeSelector(
         ) {
             Text(
                 text = stringResource(R.string.label_string),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
-            IconButton(onClick = onSelectAllStrings) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            TextButton(onClick = onSelectAllStrings) {
+                Text(stringResource(R.string.all_items))
             }
         }
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             GuitarString.all().forEach { string ->
-                val isSelected = selectedStrings.contains(string)
                 FilterChip(
-                    selected = isSelected,
+                    selected = selectedStrings.contains(string),
                     onClick = { onStringToggle(string) },
                     label = { Text(string.number.toString()) },
                     modifier = Modifier.weight(1f)
@@ -79,7 +125,7 @@ fun ModeSelector(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Notes Selection
         Row(
@@ -89,42 +135,35 @@ fun ModeSelector(
         ) {
             Text(
                 text = stringResource(R.string.label_note),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
-            IconButton(onClick = onSelectAllNotes) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            TextButton(onClick = onSelectAllNotes) {
+                Text(stringResource(R.string.all_items))
             }
         }
 
         val availableNotes = if (includeSharps) Note.allNotes() else Note.naturalNotes()
-        
+
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             availableNotes.forEach { note ->
-                val isSelected = selectedNotes.contains(note)
                 FilterChip(
-                    selected = isSelected,
+                    selected = selectedNotes.contains(note),
                     onClick = { onNoteToggle(note) },
-                    label = { 
+                    label = {
                         Text(
                             text = stringResource(note.nameResId()),
-                            style = MaterialTheme.typography.labelSmall
-                        ) 
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -133,8 +172,7 @@ fun ModeSelector(
         ) {
             Text(
                 text = stringResource(R.string.label_sharps),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                style = MaterialTheme.typography.bodyLarge
             )
             Switch(
                 checked = includeSharps,

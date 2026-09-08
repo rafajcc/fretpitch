@@ -2,12 +2,9 @@
     <string name="app_name">Guitar Fret Pitch</string>
 
     <!-- Mode selector -->
-    <string name="mode_one_note">One note</string>
-    <string name="mode_one_string">One string</string>
-    <string name="mode_all">All</string>
     <string name="label_sharps">Sharps (#)</string>
-    <string name="label_note">Note</string>
-    <string name="label_string">String</string>
+    <string name="label_note">Notes</string>
+    <string name="label_string">Strings</string>
     <string name="string_format">String %d</string>
 
     <!-- Note display -->
@@ -37,6 +34,9 @@
 
     <!-- Stats -->
     <string name="results">Results</string>
+    <string name="setup_practice">Practice Setup</string>
+    <string name="selection_summary">%1$d strings, %2$d notes</string>
+    <string name="all_items">All</string>
     <string name="time_format">Time: %s</string>
     <string name="correct_count">Correct</string>
     <string name="incorrect_count">Misses</string>
