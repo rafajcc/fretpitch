@@ -55,12 +55,12 @@ El sistema de detección ha evolucionado de una simple autocorrelación al algor
 
 | Cuerda | Nota abierta | MIDI | Rango (trastes 0-12) |
 |--------|-------------|------|----------------------|
-| 1 (Mi grave) | E4 | 64 | E4 → E5 |
+| 1 (Mi agudo) | E4 | 64 | E4 → E5 |
 | 2 (Si) | B3 | 59 | B3 → B4 |
 | 3 (Sol) | G3 | 55 | G3 → G4 |
 | 4 (Re) | D3 | 50 | D3 → D4 |
 | 5 (La) | A2 | 45 | A2 → A3 |
-| 6 (Mi agudo) | E2 | 40 | E2 → E3 |
+| 6 (Mi grave) | E2 | 40 | E2 → E3 |
 
 La app genera automáticamente el producto cartesiano de tu selección y filtra las combinaciones que exceden el traste 12.
 
@@ -84,7 +84,7 @@ La app genera automáticamente el producto cartesiano de tu selección y filtra 
 
 ## Calidad y Testing
 
-El proyecto cuenta con una suite de **18 Tests Unitarios** que se ejecutan en la JVM mediante **Robolectric**, permitiendo validar la lógica de audio y la base de datos sin necesidad de emulador.
+El proyecto cuenta con una suite de **17 tests unitarios** que se ejecutan en la JVM, incluyendo tests de lógica pura (use cases y detección de pitch) y tests que usan **Robolectric** para validar la capa de datos (preferencias y base de datos) sin necesidad de emulador.
 
 Ejecutar tests:
 ```bash
