@@ -8,14 +8,15 @@ La app genera ejercicios aleatorios ("Do en la cuerda 3"), escucha el micrófono
 
 ## Características
 
-- **3 modos de práctica**: Una nota, una cuerda, todas las notas y cuerdas
-- **Detección de pitch en tiempo real** mediante autocorrelación con interpolación parabólica
-- **Toggle de sostenidos** para incluir/excluir notas con #
-- **Velocidad ajustable** de 1 a 10 segundos por nota con flechas arriba/abajo
-- **Feedback inmediato**: tick verde (acierto) o X roja (fallo) con animación spring
-- **Sonidos de feedback**: tonos ascendentes (acierto) o descendentes (fallo) generados por AudioTrack
-- **Estadísticas de sesión**: aciertos/fallos totales, por nota, por cuerda y por combinación
-- **Permisos de micrófono** con manejo de denegación y redirección a configuración
+- **Práctica Totalmente Flexible**: Selección múltiple de cualquier combinación de cuerdas (1-6) y notas (Do-Si).
+- **Detección de Pitch de Alta Precisión**: Motor basado en el algoritmo **YIN** para una detección monofónica robusta y con rechazo de errores de octava.
+- **Alta Sensibilidad**: Optimizado para guitarras eléctricas desenchufadas y entornos silenciosos.
+- **Diseño Moderno (Material 3)**: Interfaz limpia con soporte para **Dynamic Color** (Android 12+) y Modo Claro/Oscuro.
+- **Persistencia de Datos**:
+    - **DataStore**: Guarda tus preferencias de velocidad y selección de práctica.
+    - **Room Database**: Historial persistente de sesiones para seguimiento del progreso.
+- **Feedback Visual y Sonoro**: Animaciones "spring" fluidas y tonos de referencia generados mediante AudioTrack.
+- **Estadísticas Detalladas**: Aciertos, errores y precisión por nota, cuerda y combinación.
 
 ---
 
@@ -23,33 +24,30 @@ La app genera ejercicios aleatorios ("Do en la cuerda 3"), escucha el micrófono
 
 ```
 com.fretpitch/
-├── domain/           Modelos, casos de uso, interfaces
-├── data/             AudioCapture, PitchDetector, TonePlayer, FrequencyMapper
-├── presentation/     Theme, Components, Screens, ViewModel
-└── di/               Módulos Hilt
+├── domain/           Modelos, casos de uso, interfaces de repositorio
+├── data/             Implementaciones de Audio, Repositorios, Room DB y DataStore
+├── presentation/     UI con Compose (M3), ViewModels y Tematización
+└── di/               Módulos Hilt (App y Database)
 ```
 
 | Patrón | Implementación |
 |--------|---------------|
 | MVVM | `MainViewModel` + `StateFlow<MainUiState>` |
 | Clean Architecture | Domain puro → Data con Android → Presentation con Compose |
-| Repository | `PitchDetector` (interfaz) → `PitchDetectorImpl` (implementación) |
-| Use Cases | `GenerateExerciseUseCase`, `CalculateStatsUseCase` |
-| DI | Hilt con `@Singleton`, `@HiltViewModel`, `@Binds` |
+| Repository | `PitchDetector` e `UserPreferencesRepository` |
+| Persistencia | Room (Sesiones) y DataStore (Preferencias) |
+| DI | Hilt con `@Singleton`, `@Binds` y `@Provides` |
 
 ---
 
-## Detección de Pitch
+## Motor de Audio (YIN)
 
-El algoritmo de detección funciona así:
+El sistema de detección ha evolucionado de una simple autocorrelación al algoritmo **YIN**, siguiendo estos pasos:
 
-1. **AudioCapture**: Graba a 44100 Hz, mono, PCM 16-bit con buffer de 4096 samples
-2. **Ventana de Hann**: Reduce leakage espectral
-3. **Autocorrelación normalizada**: Busca el lag con mayor correlación entre 80 Hz y 1100 Hz
-4. **Interpolación parabólica**: Refina el lag para precisión sub-muestral
-5. **Comparación**: Compara la frecuencia detectada con la objetivo usando una tolerancia de ±50 cents
-
-No depende de librerías externas — el algoritmo está implementado directamente en `PitchDetectorImpl.kt`.
+1. **Difference Function**: Calcula la diferencia cuadrática entre la señal y su versión desplazada.
+2. **CMNDF**: Normalización acumulada para eliminar valles falsos y evitar saltos de octava.
+3. **Absolute Threshold**: Búsqueda del primer mínimo local por debajo de un umbral de confianza estricto.
+4. **Interpolación Parabólica**: Refinado del lag para obtener una frecuencia con precisión sub-muestral.
 
 ---
 
@@ -64,9 +62,7 @@ No depende de librerías externas — el algoritmo está implementado directamen
 | 5 (La) | A2 | 45 | A2 → A3 |
 | 6 (Mi agudo) | E2 | 40 | E2 → E3 |
 
-Notas disponibles: Do, Do#, Re, Re#, Mi, Fa, Fa#, Sol, Sol#, La, La#, Si
-
-La app solo genera combinaciones válidas — una nota que no se puede tocar en una cuerda dada nunca aparecerá como ejercicio.
+La app genera automáticamente el producto cartesiano de tu selección y filtra las combinaciones que exceden el traste 12.
 
 ---
 
@@ -74,75 +70,29 @@ La app solo genera combinaciones válidas — una nota que no se puede tocar en 
 
 | Componente | Versión |
 |-----------|---------|
-| Gradle | 9.5.0 |
+| Gradle | 9.7.1 |
 | AGP | 9.3.2 |
 | Kotlin | 2.2.10 |
-| Compose BOM | 2024.05.00 |
+| Compose BOM | 2024.12.01 |
+| Room | 2.8.4 |
+| DataStore | 1.2.1 |
 | Hilt | 2.60.1 |
-| KSP | 2.2.10-2.0.2 |
-| Min SDK | 33 (Android 13) |
-| Target SDK | 34 |
+| KSP | 2.3.9 |
+| Target SDK | 35 |
 
 ---
 
-## Construcción y Ejecución
+## Calidad y Testing
 
-1. Clonar el repositorio:
-   ```bash
-   git clone https://github.com/rafajcc/fretpitch.git
-   ```
+El proyecto cuenta con una suite de **18 Tests Unitarios** que se ejecutan en la JVM mediante **Robolectric**, permitiendo validar la lógica de audio y la base de datos sin necesidad de emulador.
 
-2. Abrir en Android Studio
-
-3. Sync Gradle (File → Sync Project with Gradle Files)
-
-4. Conectar un dispositivo Android 13+ o crear un emulador con micrófono
-
-5. Run ▶
-
----
-
-## Estructura de Archivos
-
-```
-fretpitch/
-├── settings.gradle.kts
-├── build.gradle.kts
-├── gradle.properties
-├── gradle/
-│   ├── libs.versions.toml
-│   └── wrapper/
-├── app/
-│   ├── build.gradle.kts
-│   ├── proguard-rules.pro
-│   └── src/main/
-│       ├── AndroidManifest.xml
-│       ├── res/
-│       │   ├── drawable/          Iconos vectoriales
-│       │   ├── mipmap-anydpi-v26/ Adaptive icon
-│       │   └── values/            strings.xml, themes.xml
-│       └── java/com/fretpitch/
-│           ├── FretPitchApp.kt           @HiltAndroidApp
-│           ├── MainActivity.kt           Activity principal
-│           ├── di/AppModule.kt           Bindings Hilt
-│           ├── domain/
-│           │   ├── model/                Note, GuitarString, Exercise, AppMode, SessionResult
-│           │   ├── usecase/              GenerateExerciseUseCase, CalculateStatsUseCase
-│           │   └── repository/           PitchDetector (interfaz)
-│           ├── data/
-│           │   ├── audio/                AudioCapture, PitchDetectorImpl, TonePlayer
-│           │   └── mapper/               FrequencyMapper
-│           └── presentation/
-│               ├── model/                MainUiState, FeedbackState
-│               ├── viewmodel/            MainViewModel
-│               ├── component/            NoteDisplay, SpeedControl, ModeSelector,
-│               │                         FeedbackOverlay, StatsPanel, PermissionHandler
-│               ├── screen/               MainScreen, StatsScreen
-│               └── theme/                Color, Type, Theme
+Ejecutar tests:
+```bash
+./gradlew test
 ```
 
 ---
 
 ## Licencia
 
-Proyecto privado.
+Proyecto privado. v4.1.0 - por rafajcc & Vera Technology.
