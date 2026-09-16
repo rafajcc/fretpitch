@@ -50,7 +50,6 @@ import com.fretpitch.presentation.component.TunedStringsBar
 import com.fretpitch.presentation.component.TunerGauge
 import com.fretpitch.presentation.theme.AccentGreen
 import com.fretpitch.presentation.theme.AccentRed
-import com.fretpitch.presentation.theme.DarkSurfaceVariant
 import com.fretpitch.presentation.theme.TextSecondary
 import com.fretpitch.presentation.util.nameResId
 import com.fretpitch.presentation.viewmodel.TunerViewModel
@@ -118,9 +117,10 @@ fun TunerScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    if (tunerState.isListening && tunerState.detectedNote != null) {
+                    val detectedNote = tunerState.detectedNote
+                    if (tunerState.isListening && detectedNote != null) {
                         Text(
-                            text = stringResource(tunerState.detectedNote!!.nameResId()),
+                            text = stringResource(detectedNote.nameResId()),
                             fontSize = 72.sp,
                             fontWeight = FontWeight.Light,
                             color = when {
@@ -212,7 +212,7 @@ fun TunerScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "82 Hz - 1000 Hz",
+                            text = "70 Hz - 1100 Hz",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextSecondary.copy(alpha = 0.3f)
                         )

@@ -25,7 +25,7 @@ class PitchDetectorImpl @Inject constructor(
     private var detectionJob: Job? = null
 
     companion object {
-        private const val MIN_FREQUENCY = 80f
+        private const val MIN_FREQUENCY = 70f
         private const val MAX_FREQUENCY = 1100f
         private const val YIN_THRESHOLD = 0.15f
         private const val MIN_AMPLITUDE = 0.003f
