@@ -52,6 +52,7 @@ class MainViewModel @Inject constructor(
     private var lastWrongMidi: Int? = null
     private var lastExerciseNote: Note? = null
     private var lastExerciseString: GuitarString? = null
+    private var lastExerciseStartedAt: Long = 0L
 
     companion object {
         private const val MIN_AMPLITUDE = 0.003f
@@ -61,6 +62,7 @@ class MainViewModel @Inject constructor(
         private const val POLL_INTERVAL_MS = 50L
         private const val FEEDBACK_DISPLAY_MS = 500L
         private const val DETECTED_NOTE_HOLD_MS = 1500L
+        private const val DETECTION_GRACE_PERIOD_MS = 1000L
     }
 
     init {
@@ -240,6 +242,7 @@ class MainViewModel @Inject constructor(
                         feedback = FeedbackState.Listening
                     )
                 }
+                lastExerciseStartedAt = System.currentTimeMillis()
 
                 val deadline = System.currentTimeMillis() + _uiState.value.intervalMs
                 while (isActive && System.currentTimeMillis() < deadline) {
@@ -292,6 +295,10 @@ class MainViewModel @Inject constructor(
                     result.confidence <= PLAYED_NOTE_CONFIDENCE
                 ) {
                     val now = System.currentTimeMillis()
+                    
+                    // Skip if we are within the grace period to avoid detecting previous note's sustain
+                    if (now - lastExerciseStartedAt < DETECTION_GRACE_PERIOD_MS) return@collect
+
                     if (wrongMidi == lastWrongMidi && wrongNoteStartMs > 0L) {
                         if (now - wrongNoteStartMs >= WRONG_NOTE_SUSTAIN_MS) {
                             wrongNoteStartMs = 0L
