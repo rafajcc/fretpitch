@@ -35,9 +35,16 @@ import com.fretpitch.presentation.util.nameResId
 fun ModeSelector(
     selectedNotes: Set<Note>,
     selectedStrings: Set<GuitarString>,
+    includeSharps: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val displayNotesCount = if (includeSharps) {
+        selectedNotes.size
+    } else {
+        selectedNotes.count { !it.isSharp }
+    }
+
     OutlinedCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -62,7 +69,7 @@ fun ModeSelector(
                     text = stringResource(
                         R.string.selection_summary,
                         selectedStrings.size,
-                        selectedNotes.size
+                        displayNotesCount
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

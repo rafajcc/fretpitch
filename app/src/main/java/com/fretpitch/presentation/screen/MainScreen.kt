@@ -235,6 +235,7 @@ private fun PracticeSection(
             ModeSelector(
                 selectedNotes = uiState.mode.selectedNotes,
                 selectedStrings = uiState.mode.selectedStrings,
+                includeSharps = uiState.includeSharps,
                 onClick = onModeClick,
                 modifier = Modifier.fillMaxWidth()
             )
