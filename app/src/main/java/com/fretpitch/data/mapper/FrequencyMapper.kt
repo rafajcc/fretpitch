@@ -17,7 +17,7 @@ class FrequencyMapper @Inject constructor() {
     }
 
     fun frequencyToMidiNote(frequency: Float): Int? {
-        if (frequency <= 0f) return null
+        if (frequency <= 0f || frequency.isNaN() || frequency.isInfinite()) return null
         return (12f * log2(frequency / A4_FREQUENCY) + A4_MIDI).roundToInt()
     }
 
@@ -26,14 +26,15 @@ class FrequencyMapper @Inject constructor() {
     }
 
     fun isNoteCorrect(detectedFreq: Float, targetFreq: Float, toleranceCents: Float = 50f): Boolean {
-        if (detectedFreq <= 0f || targetFreq <= 0f) return false
+        if (detectedFreq <= 0f || targetFreq <= 0f || detectedFreq.isNaN() || targetFreq.isNaN()) return false
 
         val centsOff = 1200f * log2(detectedFreq / targetFreq)
         return abs(centsOff) <= toleranceCents
     }
 
     fun midiNoteToNote(midiNote: Int): Note? {
-        val noteIndex = midiNote % 12
+        // Handle negative midi notes correctly using periodic wrap-around
+        val noteIndex = (midiNote % 12 + 12) % 12
         return when (noteIndex) {
             0 -> Note.C
             1 -> Note.C_SHARP

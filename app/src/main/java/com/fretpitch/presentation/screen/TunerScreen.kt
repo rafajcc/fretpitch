@@ -52,6 +52,7 @@ import com.fretpitch.presentation.theme.AccentGreen
 import com.fretpitch.presentation.theme.AccentRed
 import com.fretpitch.presentation.theme.DarkSurfaceVariant
 import com.fretpitch.presentation.theme.TextSecondary
+import com.fretpitch.presentation.util.nameResId
 import com.fretpitch.presentation.viewmodel.TunerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,7 +120,7 @@ fun TunerScreen(
 
                     if (tunerState.isListening && tunerState.detectedNote != null) {
                         Text(
-                            text = tunerState.noteNameDisplay,
+                            text = stringResource(tunerState.detectedNote!!.nameResId()),
                             fontSize = 72.sp,
                             fontWeight = FontWeight.Light,
                             color = when {

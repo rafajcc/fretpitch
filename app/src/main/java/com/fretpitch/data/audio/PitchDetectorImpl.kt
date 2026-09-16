@@ -88,7 +88,11 @@ class PitchDetectorImpl @Inject constructor(
         var runningSum = 0f
         for (tau in 1 until maxLag) {
             runningSum += yinBuffer[tau]
-            yinBuffer[tau] *= tau / runningSum
+            if (runningSum > 0f) {
+                yinBuffer[tau] *= tau / runningSum
+            } else {
+                yinBuffer[tau] = 1f
+            }
         }
 
         // Step 3: Absolute Threshold
@@ -122,14 +126,20 @@ class PitchDetectorImpl @Inject constructor(
             val s0 = yinBuffer[tau - 1]
             val s1 = yinBuffer[tau]
             val s2 = yinBuffer[tau + 1]
-            tau + (s2 - s0) / (2f * (2f * s1 - s2 - s0))
+            val denom = 2f * (2f * s1 - s2 - s0)
+            if (kotlin.math.abs(denom) > 1e-6f) {
+                tau + (s2 - s0) / denom
+            } else {
+                tau.toFloat()
+            }
         } else {
             tau.toFloat()
         }
 
+        if (refinedTau == 0f || refinedTau.isNaN()) return null
         val frequency = AudioCapture.SAMPLE_RATE / refinedTau
 
-        if (frequency < MIN_FREQUENCY || frequency > MAX_FREQUENCY) return null
+        if (frequency.isNaN() || frequency.isInfinite() || frequency < MIN_FREQUENCY || frequency > MAX_FREQUENCY) return null
 
         return PitchResult(
             frequency = frequency,

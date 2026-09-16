@@ -25,7 +25,4 @@ data class TunerState(
 
     val frequencyDisplay: String
         get() = if (detectedFrequency > 0f) "${"%.1f".format(detectedFrequency)} Hz" else ""
-
-    val noteNameDisplay: String
-        get() = detectedNote?.name?.replace("_SHARP", "#") ?: ""
 }

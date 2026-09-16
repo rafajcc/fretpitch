@@ -14,8 +14,8 @@ android {
         applicationId = "com.fretpitch"
         minSdk = 33
         targetSdk = 35
-        versionCode = 20
-        versionName = "4.2.1"
+        versionCode = 21
+        versionName = "4.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
